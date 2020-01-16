@@ -1,0 +1,39 @@
+{"frames": [
+
+{
+	"filename": "agua.png",
+	"frame": {"x":0,"y":0,"w":200,"h":200},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":200,"h":200},
+	"sourceSize": {"w":200,"h":200},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "foco.png",
+	"frame": {"x":200,"y":0,"w":200,"h":200},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":200,"h":200},
+	"sourceSize": {"w":200,"h":200},
+	"pivot": {"x":0.5,"y":0.5}
+},
+{
+	"filename": "tierra.png",
+	"frame": {"x":400,"y":0,"w":200,"h":200},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":200,"h":200},
+	"sourceSize": {"w":200,"h":200},
+	"pivot": {"x":0.5,"y":0.5}
+}],
+"meta": {
+	"app": "http://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "elementos.png",
+	"format": "RGBA8888",
+	"size": {"w":600,"h":200},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:c0c05c29f690a01358ba44116a7661de:5ec80607a8b9e844c9d48aea55566a37:e18500d9f81f6e29a93a954e1b274860$"
+}
+}

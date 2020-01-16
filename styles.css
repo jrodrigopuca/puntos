@@ -1,0 +1,11 @@
+
+* {
+    padding: 0;
+    margin: 0
+}
+
+
+@font-face{
+    font-family: 'tres';
+    src:url('font/3x3_font_for_nerds.ttf');
+}
