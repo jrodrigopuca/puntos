@@ -4,14 +4,18 @@
  * 
  */
 
+//screen.lockOrientationUniversal = screen.lockOrientation || screen.mozLockOrientation || screen.msLockOrientation;
+
+"use strict";
+
 // Capturar las dimensiones
 let realWidth= window.innerWidth; // *window.devicePixelRatio;
 let realHeight= window.innerHeight; // window.devicePixelRatio;
 
 // Capturar los puntos anteriores
-var points=!!localStorage.getItem("puntos")?parseInt(localStorage.getItem("puntos")):0;
+var points=0;
 var record=!!localStorage.getItem("record")?parseInt(localStorage.getItem("record")):0;
-
+localStorage.setItem("puntos", 0);
 
 const config = {
     type: Phaser.AUTO,
@@ -54,7 +58,7 @@ function preload (){
 
     });
 
-    this.load.audio('tema', ['audio/tema.ogg', 'audio/tema.mp3']);
+    this.load.audio('tema', ['audio/tema.mp3']);
     this.load.audio('campana', ['audio/accept.mp3']);
     this.load.spritesheet('elementos', 'img/elementos.png', { frameWidth: 50, frameHeight: 50 });
     this.load.spritesheet('particulas', 
@@ -120,7 +124,7 @@ function create (){
 
 
     //texto puntos
-    estiloFuente={font: '3em tres', align: 'left', fontWeight: 'bold', stroke: '#000000', strokeThickness: 9};
+    let estiloFuente={font: '3em tres', align: 'left', fontWeight: 'bold', stroke: '#000000', strokeThickness: 9};
     miTexto = this.add.text(0.1*realWidth, 10, `points ${points}\n record ${record}`, estiloFuente);  
 
 
@@ -188,7 +192,7 @@ function update(){
 
 /**
  * Adaptar en caso de cambio de pantalla
- */
+*/
 window.addEventListener('resize', (evt)=>{
     realWidth= window.innerWidth; 
     realHeight= window.innerHeight;
