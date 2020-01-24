@@ -1,9 +1,17 @@
-const realWidth= window.innerWidth;
-// *window.devicePixelRatio;
-const realHeight= window.innerHeight;
-// window.devicePixelRatio;
-var points=localStorage.getItem("puntos")!=null?parseInt(localStorage.getItem("puntos")):0;
-var record=localStorage.getItem("record")!=null?parseInt(localStorage.getItem("record")):0;
+/**
+ *  Puntos v1.2: Actualizado el 1/24
+ * - mejora en el redimensionamiento de la pantalla
+ * 
+ */
+
+// Capturar las dimensiones
+let realWidth= window.innerWidth; // *window.devicePixelRatio;
+let realHeight= window.innerHeight; // window.devicePixelRatio;
+
+// Capturar los puntos anteriores
+var points=!!localStorage.getItem("puntos")?parseInt(localStorage.getItem("puntos")):0;
+var record=!!localStorage.getItem("record")?parseInt(localStorage.getItem("record")):0;
+
 
 const config = {
     type: Phaser.AUTO,
@@ -29,16 +37,14 @@ const config = {
 
 var game = new Phaser.Game(config);
 var progress;
-var arbol, agua, foco, miTexto, camera,elementos, particulas, cuadro1,cuadro2,cuadro3,music, campana;
+var miTexto, camera,elementos, particulas, cuadro1,cuadro2,cuadro3,music, campana;
 
 function preload (){
     progress = this.add.graphics();
 
     this.load.on('progress', function (value) {
-
         progress.clear();
         progress.fillStyle(0xffffff, 1);
-
         progress.fillRect(0, realHeight/2, realWidth * value, 60);
 
     });
@@ -48,8 +54,6 @@ function preload (){
 
     });
 
-    //console.log(`h: ${realHeight} w:${realWidth}`);
-    this.load.image('arbol', 'img/arbol1.png');
     this.load.audio('tema', ['audio/tema.ogg', 'audio/tema.mp3']);
     this.load.audio('campana', ['audio/accept.mp3']);
     this.load.spritesheet('elementos', 'img/elementos.png', { frameWidth: 50, frameHeight: 50 });
@@ -61,11 +65,6 @@ function preload (){
 
 function create (){
     
-    //arbol = this.physics.add.sprite(100,realHeight/2, 'arbol');
-    
-    //arbol.setData('h', points);
-    //console.log(arbol.getData('h'));
-
     music = this.sound.add('tema');
     music.loop=true;
     music.play();
@@ -124,8 +123,6 @@ function create (){
     estiloFuente={font: '3em tres', align: 'left', fontWeight: 'bold', stroke: '#000000', strokeThickness: 9};
     miTexto = this.add.text(0.1*realWidth, 10, `points ${points}\n record ${record}`, estiloFuente);  
 
-    //camera= this.cameras.add(0, 0, 480, 800);
-    //camera.setBackgroundColor('rgba(255, 0, 0, 0.5)'); 
 
     this.time.addEvent({
         delay: 100,
@@ -135,11 +132,14 @@ function create (){
 
     this.input.on('pointerdown', function (pointer, gObjects) {
         if (gObjects.length >0){
-            //console.log(gObjects[0]);
             elementos.kill(gObjects[0]);
             campana.play();
             points+=1;
-            record=points>record?points:record;
+            if (points > record){
+                record=points;
+                localStorage.setItem("record", points);
+            }
+            //record=points>record?points:record;
 
             localStorage.setItem("puntos", points);
             miTexto.text= `points ${points}\n record ${record}`;
@@ -186,3 +186,11 @@ function update(){
     */
 }
 
+/**
+ * Adaptar en caso de cambio de pantalla
+ */
+window.addEventListener('resize', (evt)=>{
+    realWidth= window.innerWidth; 
+    realHeight= window.innerHeight;
+    game.scale.resize(realWidth,realHeight);
+},false)
