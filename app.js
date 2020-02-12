@@ -45,9 +45,12 @@ const config = {
     }
 };
 
+
+
+
 var game = new Phaser.Game(config);
 let progress;
-let miTexto, camera, elementos, btnAudio, particulas, cuadro1, cuadro2, cuadro3,cuadro4, cuadro5, music, campana;
+let miTexto, camera, elementos, btnAudio, particulas, cuadro1, cuadro2, cuadro3, cuadro4, cuadro5, music, campana;
 
 function preload() {
     progress = this.add.graphics();
@@ -160,6 +163,7 @@ function create() {
         callback: agregarElemento
     });
 
+    
     this.input.on('pointerdown', function (pointer, gObjects) {
         if (gObjects.length > 0) {
             elementos.kill(gObjects[0]);
@@ -188,7 +192,7 @@ function agregarElemento() {
     el.setInteractive();
     el.setVisible(true);
     //const colores =  [0x61d4b3,0xfdd365, 0xfb8d62, 0xfd2eb3] 
-    const colores =  [0xffaaaa,0xac93de, 0xffdd55, 0xffffff] 
+    const colores = [0xffaaaa, 0xac93de, 0xffdd55, 0xffffff]
     const randomColor = colores[Math.floor(Math.random() * colores.length)];
     //console.log("l")
     //el.setTint(0x00ffff);
