@@ -5,7 +5,7 @@ let GameScene = new Phaser.Class({
     Extends: Phaser.Scene,
 
     /**
-     *  cargar los elementos a usar a la clase, 
+     *  cargar todo lo necesario sobre 'this', 
      *  de este modo será más fácil para acceder 
      *  en los otros métodos.
      */
@@ -56,10 +56,18 @@ let GameScene = new Phaser.Class({
             { frameWidth: 25, frameHeight: 25 }
         );
     },
+    /**
+     * @function create 
+     * - cargar texto para mostrar los puntos y record
+     * - cargar los audio pero no reproducirlos hasta tener una confirmación del usuario (click en botón o pointerdown)
+     * - cargar las particulas 
+     * - definir elements (frutas)
+     * - cargar 5 elements con un temporizador (this.time)
+     */
     create: function () {
-
         let styleText = { font: '5em tres', align: 'left', fontWeight: 'bold', stroke: '#000000', strokeThickness: 9 };
         this.myText = this.add.text(0.1 * realWidth, 10, `🍊  ${this.points}\n 🏆 ${this.record}`, styleText);
+
         this.music = this.sound.add('song');
         this.music.loop = true;
         this.music.stop();
@@ -100,7 +108,6 @@ let GameScene = new Phaser.Class({
             },
         });
 
-        // crear los cinco de una sola vez
         this.time.addEvent({
             delay: 1000,
             repeat: 4,
@@ -108,6 +115,16 @@ let GameScene = new Phaser.Class({
             callback: () => { this.createElement() }
         });
     },
+    /**
+     * @function setPoints: cambiar puntuación (puntos y record)
+     * - actualizar record (si el nuevo valor es mayor al récord actual)
+     * - vibrar si el puntaje se mantiene en cero (solo una vez consecutiva)
+     * - si suma puntos reproducir sonido
+     * - actualizar texto donde muestra puntuación
+     * - mover sprite al inicio de la pantalla
+     * @param {Integer} val 
+     * @param {Sprite} el 
+     */
     setPoints(val, el) {
         if (val > this.record) {
             this.record = val;
@@ -115,25 +132,36 @@ let GameScene = new Phaser.Class({
             //this.cameras.main.setBackgroundColor(Phaser.Display.Color.RandomRGB().color);
         }
         if (val===0 && val!=this.points){window.navigator.vibrate(1000);}
+
         if (!this.silence && val >= 1) { this.bell.play(); }
 
         this.points = val;
         this.myText.text = `🍊  ${this.points}\n 🏆 ${this.record}`;
         this.myText.updateText();
+
         el.x = Phaser.Math.Between(0.1 * realWidth, realWidth - (0.1 * realWidth));
         el.y = 0;
 
     },
+    /**
+     * @function createElement: crea un nuevo elemento (fruta) al inicio
+     * - revisar si ya hay 5 frutas (lo máximo permitido)
+     * - crear una fruta (en la parte superior)
+     * - cambiar el color de la fruta (setTint)
+     * - agregar evento pointerdown (click) para sumar puntos
+     * - hacer aparecer las partículas
+     */
     createElement: function () {
         if (!this.elements.isFull()) {
             let el = this.elements.create(Phaser.Math.Between(0.1 * realWidth, realWidth - (0.1 * realWidth)), 0, 'elements', Phaser.Math.Between(0, 3));
-            el.setInteractive();
-            el.setVisible(true);
             el.setName('e' + this.elements.getLength());
 
             const colores = [0xffaaaa, 0xac93de, 0xffdd55, 0xffffff]
             const randomColor = colores[Math.floor(Math.random() * colores.length)];
             el.setTint(randomColor);
+
+            el.setInteractive();
+            el.setVisible(true);
             el.on('pointerdown', (pointer, localX, localY, event) => {
                 this.setPoints(this.points + 1, el);
                 this.particles.emitParticleAt(pointer.x, pointer.y);
@@ -144,6 +172,10 @@ let GameScene = new Phaser.Class({
             return;
         }
     },
+    /**
+     * @function interactElements: revisa si hay un elemento que esta 
+     * pasando los límites de la pantalla, si lo hay debería cambiar el puntaje a 0
+     */
     interactElements: function () {
         this.elements.children.iterate((el) => {
             if (el.y > realHeight) {
@@ -151,6 +183,12 @@ let GameScene = new Phaser.Class({
             }
         })
     },
+    /**
+     * @function update: 
+     * @param {number} time 
+     * @param {number} delta
+     * @description: actualiza la velocidad y revisar si alguna fruta se escapa por los límites de la pantalla. 
+     */
     update: function (time, delta) {
         let velocidad = 1 + this.points * 0.1;
         Phaser.Actions.IncY(this.elements.getChildren(), velocidad);
@@ -183,6 +221,9 @@ let config = {
 
 const game = new Phaser.Game(config);
 
+/**
+ * @function resize: adaptar las variables de realWidth y realHeight ante un cambio de dimensiones de pantalla
+ */
 window.addEventListener('resize', (evt) => {
     realWidth = window.innerWidth;
     realHeight = window.innerHeight;
