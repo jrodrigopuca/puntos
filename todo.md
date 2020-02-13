@@ -1,5 +1,8 @@
-hacer funcionar tecla 'x' 
-boton audio
+[_] hacer funcionar tecla 'x' 
+[x] boton audio
+[_] tiene que tener pausa?
+[_] tiene que cambiar el color la pantalla?
+[_] tiene que reiniciar?
 
 hacer similar a https://phaser.io/examples/v3/view/scalemanager/fit-running-game
 
