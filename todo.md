@@ -4,14 +4,40 @@
 [_] tiene que cambiar el color la pantalla?
 [_] tiene que reiniciar?
 
-hacer similar a https://phaser.io/examples/v3/view/scalemanager/fit-running-game
+inspiración para la estructura: 
+https://phaser.io/examples/v3/view/scalemanager/fit-running-game
+
+PWA
 
 https://hacks.mozilla.org/2018/05/progressive-web-games/
 
+https://hacks.mozilla.org/2018/05/progressive-web-apps-core-guides-on-mdn-web-docs/
+
+el juego
+https://enclavegames.github.io/Enclave-Phaser-Template/
+
+source
+https://github.com/EnclaveGames/Enclave-Phaser-Template/blob/gh-pages/src/start.js
+
+https://github.com/EnclaveGames/Enclave-Phaser-Template/blob/gh-pages/src/sw.js
+
+-------
+PWa
+https://developers.google.com/web/fundamentals/codelabs/your-first-pwapp?hl=es
 
 
-https://gamedevacademy.org/how-to-create-a-turn-based-rpg-game-in-phaser-3-part-1/
+Making PWAs work offline with Service workers
+https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Offline_Service_workers
+
+Service workers
+https://developers.google.com/web/fundamentals/primers/service-workers?hl=es
+
+fuente
+https://github.com/googlecodelabs/your-first-pwapp/blob/master/public/service-worker.js
 
 
-metodos de grupo
-https://rexrainbow.github.io/phaser3-rex-notes/docs/site/arcade-gameobject/#methods-of-group
+
+Home scren
+https://developers.google.com/web/fundamentals/app-install-banners
+
+-------

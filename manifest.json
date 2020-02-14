@@ -1,6 +1,7 @@
 {
-    "short_name": "Puntos",
     "name": "Puntos",
+    "short_name": "Puntos",
+    "description": "Simple game",
     "icons": [
         {
             "src": "img/icons-192.png",
@@ -14,9 +15,8 @@
         }
     ],
     "start_url": "index.html",
-    "background_color": "#3367D6",
-    "orientation":"landscape",
     "display": "fullscreen",
-    "scope": "/",
-    "theme_color": "#3367D6"
+    "orientation":"landscape",
+    "theme_color": "#d5f6ff",
+    "background_color": "#d5f6ff"
 }

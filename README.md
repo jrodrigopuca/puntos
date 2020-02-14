@@ -1,2 +1,3 @@
-# Puntos 
-Juego realizado con PhaserJS
+# Puntos
+
+Juego PWA realizado con PhaserJS
