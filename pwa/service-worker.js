@@ -1,18 +1,17 @@
-const cacheName = 'puntos-v1.3';
+const cacheName = 'puntos-v1.3.9';
 
 const appShellFiles = [
-    './audio/accept.mp3',
-    './audio/tema.mp3',
-    './font/8BitArtSansNeue.ttf',
-    './img/elementos.png',
-    './img/favicon.svg',
-    './img/files.png',
-    './img/icons-192.png',
-    './img/icons-512.png',
-    './vendor/phaser.min.js',
-    './app.js',
-    './index.html',
-    './styles.css'
+    'audio/accept.mp3',
+    'audio/tema.mp3',
+    'img/elementos.png',
+    'img/favicon.svg',
+    'img/files.png',
+    'img/icons-192.png',
+    'img/icons-512.png',
+    'vendor/phaser.min.js',
+    'app.js',
+    'index.html',
+    'styles.css'
 ];
 
 self.addEventListener('install', evt => {
@@ -38,10 +37,10 @@ self.addEventListener('activate', evt =>{
 
 self.addEventListener('fetch', function (evt) {
     evt.respondWith(
-        caches.match(e.request).then(function (r) {
-            return r || fetch(e.request).then(function (response) {
+        caches.match(evt.request).then(function (r) {
+            return r || fetch(evt.request).then(function (response) {
                 return caches.open(cacheName).then(function (cache) {
-                    cache.put(e.request, response.clone());
+                    cache.put(evt.request, response.clone());
                     return response;
                 });
             });
