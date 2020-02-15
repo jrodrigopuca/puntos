@@ -1,4 +1,4 @@
-const cacheName = 'puntos-v1.2';
+const cacheName = 'puntos-v1.3';
 
 const appShellFiles = [
     './audio/accept.mp3',
