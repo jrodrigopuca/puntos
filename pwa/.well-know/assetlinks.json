@@ -1,0 +1,9 @@
+[{
+    "relation":["delegate_permission/common.handle_all_urls"],
+    "target":{
+        "namespace":"android_app",
+        "package_name":"jarp.proy.puntos",
+        "sha256_cert_fingerprints":[
+           "63:9A:30:7C:08:54:1A:0A:C6:09:0B:AD:85:96:DB:51:9A:A2:70:9B:38:71:7E:50:9D:9A:37:04:55:B2:48:25" 
+        ]}
+}]
