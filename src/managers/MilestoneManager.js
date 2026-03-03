@@ -11,55 +11,55 @@ export default class MilestoneManager {
 		this.scene = scene;
 		this.achievedMilestones = new Set();
 
-		// Definición de milestones
+		// Definición de milestones (arcade style — sin emojis)
 		this.milestones = [
 			{
 				score: 50,
-				title: "🌅 Amanecer",
+				title: "- NEON CITY -",
 				theme: "sunset",
-				message: "¡Buen comienzo!",
+				message: "BUEN COMIENZO",
 			},
 			{
 				score: 100,
-				title: "🌿 Bosque",
+				title: "- MATRIX -",
 				theme: "forest",
-				message: "¡Sigue así!",
+				message: "SIGUE ASI",
 			},
 			{
 				score: 150,
-				title: "🌙 Noche",
+				title: "- MIDNIGHT -",
 				theme: "night",
-				message: "¡Increíble!",
+				message: "INCREIBLE",
 			},
 			{
 				score: 200,
-				title: "💫 Estelar",
+				title: "- COSMIC -",
 				theme: "cosmic",
-				message: "¡Asombroso!",
+				message: "ASOMBROSO",
 			},
 			{
 				score: 300,
-				title: "🔥 Fuego",
+				title: "- BLAZE -",
 				theme: "fire",
-				message: "¡Imparable!",
+				message: "IMPARABLE",
 			},
 			{
 				score: 500,
-				title: "👑 Leyenda",
+				title: "* LEGENDARIO *",
 				theme: "gold",
-				message: "¡LEGENDARIO!",
+				message: "LEGENDARY",
 			},
 		];
 
-		// Temas de color (background colors)
+		// Temas de color (background colors — CRT dark neon)
 		this.themes = {
-			default: 0x2c3e50,
-			sunset: 0xff6b6b,
-			forest: 0x2ecc71,
-			night: 0x34495e,
-			cosmic: 0x9b59b6,
-			fire: 0xe74c3c,
-			gold: 0xf1c40f,
+			default: 0x0a0a2e,
+			sunset: 0x1a0a1a,
+			forest: 0x0a1a0a,
+			night: 0x05051a,
+			cosmic: 0x150a2e,
+			fire: 0x1a0505,
+			gold: 0x1a1a05,
 		};
 	}
 

@@ -14,7 +14,7 @@ const config = {
 		autoCenter: Phaser.Scale.CENTER_BOTH,
 	},
 	pixelArt: true,
-	backgroundColor: Phaser.Display.Color.RandomRGB().color,
+	backgroundColor: 0x0a0a2e, // CRT dark blue — retro arcade
 	audio: {
 		disableWebAudio: true,
 	},

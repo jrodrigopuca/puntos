@@ -16,6 +16,7 @@ export const GameConstants = {
 	},
 	GAMEPLAY: {
 		MAX_FRUITS: 5,
+		FRUIT_TYPES: 8,
 		SPAWN_DELAY: 1000,
 		BASE_SPEED: 1,
 		SPEED_MULTIPLIER: 0.1,
@@ -27,7 +28,6 @@ export const GameConstants = {
 		LIFESPAN: 800,
 		EMIT_COUNT: 5,
 	},
-	COLORS: [0xffaaaa, 0xac93de, 0xffdd55, 0xffffff],
 };
 
 /**
