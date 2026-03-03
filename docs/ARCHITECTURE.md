@@ -13,15 +13,16 @@
 
 ## Descripción General
 
-**Puntos** es un juego casual tipo PWA (Progressive Web App) desarrollado con PhaserJS 3. El objetivo es simple: hacer tap/click en las frutas que caen antes de que lleguen al fondo de la pantalla.
+**Puntos** es un juego casual web desarrollado con PhaserJS 3. El objetivo es simple: hacer tap/click en las frutas que caen antes de que lleguen al fondo de la pantalla.
+
+> 📝 **Nota histórica:** Este juego fue originalmente una PWA con intento de distribución como TWA (Trusted Web Activity) en Play Store sin éxito. Se simplificó a web game puro para facilitar distribución por URL.
 
 ### Características principales
 
 - 🎮 Juego arcade casual
-- 📱 PWA instalable en dispositivos móviles
+- 📱 Optimizado para dispositivos móviles (controles táctiles)
 - 🔇 Control de audio (música y efectos)
 - 🏆 Sistema de récord persistente (localStorage)
-- 📶 Funciona offline gracias al Service Worker
 - 📐 Responsive (adapta a cualquier tamaño de pantalla)
 
 ---
@@ -57,23 +58,21 @@
 
 ### Stack Tecnológico
 
-| Tecnología     | Versión | Propósito                     |
-| -------------- | ------- | ----------------------------- |
-| PhaserJS       | 3.x     | Motor de juegos 2D            |
-| Service Worker | -       | Cache y funcionalidad offline |
-| Web Manifest   | -       | Instalación como PWA          |
-| localStorage   | -       | Persistencia del récord       |
+| Tecnología   | Versión        | Propósito               |
+| ------------ | -------------- | ----------------------- |
+| PhaserJS     | 3.x (pre-3.60) | Motor de juegos 2D      |
+| localStorage | -              | Persistencia del récord |
+
+> ⚠️ **Nota de compatibilidad:** El código actual usa APIs de Phaser anteriores a la versión 3.60. Para actualizar a versiones más recientes (3.60+), se requiere migrar el sistema de partículas y las definiciones de clase. Ver [IMPROVEMENT_PLAN.md](IMPROVEMENT_PLAN.md) sección 3.2.
 
 ### Estructura de Archivos
 
 ```
 puntos/
 ├── docs/                    # Documentación
-├── pwa/                     # Aplicación principal
+├── pwa/                     # Aplicación principal (nombre histórico)
 │   ├── app.js              # Lógica del juego (GameScene)
 │   ├── index.html          # Punto de entrada HTML
-│   ├── manifest.json       # Configuración PWA
-│   ├── service-worker.js   # Cache y offline
 │   ├── styles.css          # Estilos base
 │   ├── audio/
 │   │   ├── accept.mp3      # Sonido al ganar puntos
@@ -83,13 +82,22 @@ puntos/
 │   ├── img/
 │   │   ├── elementos.png   # Spritesheet de frutas
 │   │   ├── files.png       # Spritesheet de partículas
-│   │   ├── favicon.svg     # Icono del sitio
-│   │   └── icons-*.png     # Iconos PWA
+│   │   └── favicon.svg     # Icono del sitio
 │   └── vendor/
 │       └── phaser.min.js   # Motor Phaser
 ├── start.sh                # Script para iniciar servidor
 └── README.md               # Documentación básica
 ```
+
+### Archivos Deprecados (pueden eliminarse)
+
+| Archivo             | Razón                                |
+| ------------------- | ------------------------------------ |
+| `manifest.json`     | Ya no es PWA                         |
+| `service-worker.js` | Ya no es PWA                         |
+| `img/icons-192.png` | Iconos PWA no necesarios             |
+| `img/icons-512.png` | Iconos PWA no necesarios             |
+| `img/icon-pure.png` | Apple touch icon (opcional mantener) |
 
 ---
 
@@ -262,33 +270,33 @@ velocidad = 1 + (puntos × 0.1)
 
 ### 🐛 Bugs Conocidos
 
-| ID  | Descripción                   | Severidad | Estado      |
-| --- | ----------------------------- | --------- | ----------- |
-| #1  | La tecla 'X' no funciona      | Media     | Pendiente   |
-| #2  | Sin funcionalidad de pausa    | Baja      | Por definir |
-| #3  | Sin opción de reinicio manual | Baja      | Por definir |
+| ID     | Descripción                   | Severidad | Estado                                 |
+| ------ | ----------------------------- | --------- | -------------------------------------- |
+| ~~#1~~ | ~~La tecla 'X' no funciona~~  | --        | Descartado (juego diseñado para móvil) |
+| #2     | Sin funcionalidad de pausa    | Media     | Pendiente - usar botón táctil          |
+| #3     | Sin opción de reinicio manual | Media     | Pendiente - usar botón táctil          |
 
 ### ⚠️ Limitaciones Técnicas
 
-| Limitación                  | Impacto                   | Workaround     |
-| --------------------------- | ------------------------- | -------------- |
-| Máximo 5 frutas simultáneas | Limita complejidad visual | Por diseño     |
-| Audio requiere interacción  | Política de navegadores   | Botón de audio |
-| No hay estados de juego     | Sin menú/pausa/game over  | Juego infinito |
+| Limitación                  | Impacto                   | Workaround                |
+| --------------------------- | ------------------------- | ------------------------- |
+| Máximo 5 frutas simultáneas | Limita complejidad visual | Por diseño                |
+| Audio requiere interacción  | Política de navegadores   | Botón de audio            |
+| No hay estados de juego     | Sin menú/pausa/game over  | Juego infinito            |
+| Solo controles táctiles     | Sin soporte teclado       | Por diseño (mobile-first) |
 
 ### 📝 Deuda Técnica
 
 1. **Variables globales**: `realWidth` y `realHeight` están en scope global
 2. **Sin minificación**: El código no está optimizado para producción
 3. **Sin tests**: No existe suite de pruebas automatizadas
-4. **Emitters de partículas sin uso diferenciado**: `square1-5` se crean pero solo se usa `emitParticleAt` genérico
+4. ~~**Emitters de partículas sin uso diferenciado**~~: Corregido en v1.4.0
 
 ### 🔮 Mejoras Futuras Sugeridas
 
-- [ ] Implementar funcionalidad de tecla 'X'
-- [ ] Agregar pantalla de pausa
+- [ ] Agregar botón de pausa (táctil)
+- [ ] Agregar botón de reinicio (táctil)
 - [ ] Cambio dinámico de color de fondo por récord
-- [ ] Agregar botón de reinicio
 - [ ] Sistema de niveles o power-ups
 - [ ] Leaderboard online
 - [ ] Sonidos diferenciados por tipo de fruta

@@ -1,43 +1,26 @@
-[_] hacer funcionar tecla 'x' 
+[x] ~~hacer funcionar tecla 'x'~~ (descartado - juego diseñado para móvil, sin teclado)
 [x] boton audio
-[_] tiene que tener pausa?
+[x] ~~PWA~~ (descartado - simplificado a web game puro, TWA sin éxito)
+[_] tiene que tener pausa? → SÍ, con botón táctil
 [_] tiene que cambiar el color la pantalla?
-[_] tiene que reiniciar?
+[_] tiene que reiniciar? → SÍ, con botón táctil
 
-inspiración para la estructura: 
+---
+
+## Referencias útiles
+
+Inspiración para la estructura:
 https://phaser.io/examples/v3/view/scalemanager/fit-running-game
 
-PWA
-
-https://hacks.mozilla.org/2018/05/progressive-web-games/
-
-https://hacks.mozilla.org/2018/05/progressive-web-apps-core-guides-on-mdn-web-docs/
-
-el juego
+Template de referencia:
 https://enclavegames.github.io/Enclave-Phaser-Template/
+https://github.com/EnclaveGames/Enclave-Phaser-Template/
 
-source
-https://github.com/EnclaveGames/Enclave-Phaser-Template/blob/gh-pages/src/start.js
+---
 
-https://github.com/EnclaveGames/Enclave-Phaser-Template/blob/gh-pages/src/sw.js
+## Archivos deprecados (pueden eliminarse)
 
--------
-PWa
-https://developers.google.com/web/fundamentals/codelabs/your-first-pwapp?hl=es
-
-
-Making PWAs work offline with Service workers
-https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Offline_Service_workers
-
-Service workers
-https://developers.google.com/web/fundamentals/primers/service-workers?hl=es
-
-fuente
-https://github.com/googlecodelabs/your-first-pwapp/blob/master/public/service-worker.js
-
-
-
-Home scren
-https://developers.google.com/web/fundamentals/app-install-banners
-
--------
+- manifest.json
+- service-worker.js
+- img/icons-192.png
+- img/icons-512.png
