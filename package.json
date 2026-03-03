@@ -1,0 +1,28 @@
+{
+  "name": "puntos",
+  "version": "2.0.0",
+  "description": "Juego web casual realizado con PhaserJS. Tap en las frutas que caen antes de que escapen.",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://jrodrigopuca@github.com/jrodrigopuca/puntos.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jrodrigopuca/puntos/issues"
+  },
+  "homepage": "https://github.com/jrodrigopuca/puntos#readme",
+  "devDependencies": {
+    "vite": "^7.3.1"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0"
+  }
+}

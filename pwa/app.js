@@ -1,50 +1,98 @@
-let realWidth = window.innerWidth; // *window.devicePixelRatio;
-let realHeight = window.innerHeight; // window.devicePixelRatio;
+// ==================== CONSTANTES ====================
+const GameConstants = {
+	UI: {
+		MARGIN_PERCENT: 0.1,
+		AUDIO_BTN_X_PERCENT: 0.8,
+		PAUSE_BTN_X_PERCENT: 0.45,
+		TEXT_STYLE: {
+			font: "5em tres",
+			align: "left",
+			fontWeight: "bold",
+			stroke: "#000000",
+			strokeThickness: 9,
+		},
+	},
+	GAMEPLAY: {
+		MAX_FRUITS: 5,
+		SPAWN_DELAY: 1000,
+		BASE_SPEED: 1,
+		SPEED_MULTIPLIER: 0.1,
+		MAX_SPEED: 15,
+	},
+	PARTICLES: {
+		MAX_ACTIVE: 50,
+		SPEED: 300,
+		LIFESPAN: 800,
+		EMIT_COUNT: 5,
+	},
+	COLORS: [0xffaaaa, 0xac93de, 0xffdd55, 0xffffff],
+};
 
+const GameState = {
+	LOADING: "loading",
+	PLAYING: "playing",
+	PAUSED: "paused",
+};
+
+// ==================== GAME SCENE ====================
 let GameScene = new Phaser.Class({
 	Extends: Phaser.Scene,
 
 	/**
-	 *  cargar todo lo necesario sobre 'this',
-	 *  de este modo será más fácil para acceder
-	 *  en los otros métodos.
+	 * Inicializa el estado del juego
 	 */
 	initialize: function GameScene() {
 		Phaser.Scene.call(this, { key: "gameScene", active: true });
 
-		this.points = 0;
-		this.record = !!localStorage.getItem("record")
+		// Estado del juego
+		this.currentState = GameState.LOADING;
+
+		// Puntuación
+		this.score = 0;
+		this.record = localStorage.getItem("record")
 			? parseInt(localStorage.getItem("record"))
 			: 0;
 
-		this.myText = "";
-		this.elements = null;
+		// Referencias de UI
+		this.scoreText = null;
 		this.btnAudio = null;
-		this.particles = null;
-		this.emitter = null; // Un solo emitter controlado
-		this.music = null;
-		this.bell = null;
+		this.btnPause = null;
+		this.pauseOverlay = null;
+		this.continueBtn = null;
 
-		this.silence = true;
-		this.btnAudio = null;
+		// Elementos del juego
+		this.fruits = null;
+		this.particles = null;
+		this.emitter = null;
+
+		// Audio
+		this.isMuted = true;
+		this.music = null;
+		this.sfxBell = null;
 	},
 
 	/**
-	 *  crear una barra de progreso para mostrar
-	 * mientras se cargan los datos
+	 * Carga assets y muestra barra de progreso
 	 */
 	preload: function () {
-		let progress = this.add.graphics();
-		this.load.on("progress", function (value) {
-			progress.clear();
-			progress.fillStyle(0xffffff, 1);
-			progress.fillRect(0, realHeight / 2, realWidth * value, 60);
+		// Barra de progreso de carga
+		const progressBar = this.add.graphics();
+		this.load.on("progress", (value) => {
+			progressBar.clear();
+			progressBar.fillStyle(0xffffff, 1);
+			progressBar.fillRect(
+				0,
+				this.scale.height / 2,
+				this.scale.width * value,
+				60,
+			);
 		});
 
-		this.load.on("complete", function () {
-			progress.destroy();
+		this.load.on("complete", () => {
+			progressBar.destroy();
 		});
 
+		// Cargar assets
 		this.load.audio("song", ["audio/tema.mp3"]);
 		this.load.audio("bell", ["audio/accept.mp3"]);
 		this.load.spritesheet("elements", "img/elementos.png", {
@@ -57,186 +105,297 @@ let GameScene = new Phaser.Class({
 		});
 	},
 	/**
-	 * @function create
-	 * - cargar texto para mostrar los puntos y record
-	 * - cargar los audio pero no reproducirlos hasta tener una confirmación del usuario (click en botón o pointerdown)
-	 * - cargar las particulas
-	 * - definir elements (frutas)
-	 * - cargar 5 elements con un temporizador (this.time)
+	 * Crea la escena del juego: UI, audio, partículas y frutas
 	 */
 	create: function () {
-		let styleText = {
-			font: "5em tres",
-			align: "left",
-			fontWeight: "bold",
-			stroke: "#000000",
-			strokeThickness: 9,
-		};
-		this.myText = this.add.text(
-			0.1 * realWidth,
+		// UI: Texto de puntuación
+		this.scoreText = this.add.text(
+			GameConstants.UI.MARGIN_PERCENT * this.scale.width,
 			10,
-			`🍊  ${this.points}\n 🏆 ${this.record}`,
-			styleText,
+			`🍊  ${this.score}\n 🏆 ${this.record}`,
+			GameConstants.UI.TEXT_STYLE,
 		);
 
+		// Audio
 		this.music = this.sound.add("song");
 		this.music.loop = true;
 		this.music.stop();
-		this.bell = this.sound.add("bell");
-		this.bell.stop();
+		this.sfxBell = this.sound.add("bell");
+		this.sfxBell.stop();
 
+		// UI: Botón de audio
 		this.btnAudio = this.add.text(
-			realWidth - 0.2 * realWidth,
+			this.scale.width * GameConstants.UI.AUDIO_BTN_X_PERCENT,
 			10,
 			"🔇",
-			styleText,
+			GameConstants.UI.TEXT_STYLE,
 		);
 		this.btnAudio.setInteractive().on("pointerdown", () => {
-			if (this.silence) {
-				this.btnAudio.text = "🔊";
-				this.music.play();
-				this.silence = false;
-			} else {
-				this.btnAudio.text = "🔇";
-				this.music.pause();
-				this.silence = true;
-			}
-			this.btnAudio.updateText();
+			this.toggleAudio();
 		});
 
-		// Sistema de partículas simplificado - un solo emitter con límite de partículas
+		// UI: Botón de pausa
+		this.btnPause = this.add.text(
+			this.scale.width * GameConstants.UI.PAUSE_BTN_X_PERCENT,
+			10,
+			"⏸️",
+			GameConstants.UI.TEXT_STYLE,
+		);
+		this.btnPause.setInteractive().on("pointerdown", () => {
+			this.togglePause();
+		});
+
+		// Sistema de partículas simplificado - un solo emitter con límite
 		this.particles = this.add.particles("particles");
 		this.emitter = this.particles.createEmitter({
 			frame: [0, 1, 2, 3, 4],
 			x: 0,
 			y: 0,
-			speed: 300,
-			lifespan: 800,
+			speed: GameConstants.PARTICLES.SPEED,
+			lifespan: GameConstants.PARTICLES.LIFESPAN,
 			on: false,
-			maxParticles: 50, // Limitar partículas activas
+			maxParticles: GameConstants.PARTICLES.MAX_ACTIVE,
 		});
 
-		this.elements = this.add.group({
+		// Grupo de frutas
+		this.fruits = this.add.group({
 			defaultKey: "elements",
-			maxSize: 5,
+			maxSize: GameConstants.GAMEPLAY.MAX_FRUITS,
 			setCollideWorldBounds: true,
-			runChildUpdate: false, // Los sprites no tienen update(), evitar llamadas innecesarias
+			runChildUpdate: false,
 			createCallback: function (el) {},
 		});
 
+		// Spawn inicial de frutas
 		this.time.addEvent({
-			delay: 1000,
-			repeat: 4,
+			delay: GameConstants.GAMEPLAY.SPAWN_DELAY,
+			repeat: GameConstants.GAMEPLAY.MAX_FRUITS - 1,
 			loop: false,
 			callback: () => {
-				this.createElement();
+				this.spawnFruit();
 			},
 		});
+
+		// Escuchar cambios de tamaño para reposicionar UI
+		this.scale.on("resize", this.handleResize, this);
+
+		// Cambiar estado a jugando
+		this.setState(GameState.PLAYING);
 	},
 	/**
-	 * @function setPoints: cambiar puntuación (puntos y record)
-	 * - actualizar record (si el nuevo valor es mayor al récord actual)
-	 * - vibrar si el puntaje se mantiene en cero (solo una vez consecutiva)
-	 * - si suma puntos reproducir sonido
-	 * - actualizar texto donde muestra puntuación
-	 * - mover sprite al inicio de la pantalla
-	 * @param {Integer} val
-	 * @param {Sprite} el
+	 * Cambia el estado del juego
 	 */
-	setPoints(val, el) {
-		if (val > this.record) {
-			this.record = val;
-			localStorage.setItem("record", val);
-			//this.cameras.main.setBackgroundColor(Phaser.Display.Color.RandomRGB().color);
+	setState: function (newState) {
+		this.currentState = newState;
+		this.events.emit("stateChanged", newState);
+	},
+
+	/**
+	 * Toggle del audio (música de fondo)
+	 */
+	toggleAudio: function () {
+		if (this.isMuted) {
+			this.btnAudio.text = "🔊";
+			this.music.play();
+			this.isMuted = false;
+		} else {
+			this.btnAudio.text = "🔇";
+			this.music.pause();
+			this.isMuted = true;
 		}
-		if (val === 0 && val != this.points) {
+		this.btnAudio.updateText();
+	},
+
+	/**
+	 * Toggle del estado de pausa
+	 */
+	togglePause: function () {
+		if (this.currentState === GameState.PLAYING) {
+			this.physics.pause();
+			this.setState(GameState.PAUSED);
+			this.showPauseOverlay();
+		} else if (this.currentState === GameState.PAUSED) {
+			this.physics.resume();
+			this.setState(GameState.PLAYING);
+			this.hidePauseOverlay();
+		}
+	},
+
+	/**
+	 * Muestra overlay de pausa con botón de continuar
+	 */
+	showPauseOverlay: function () {
+		// Overlay semi-transparente
+		this.pauseOverlay = this.add.rectangle(
+			this.scale.width / 2,
+			this.scale.height / 2,
+			this.scale.width,
+			this.scale.height,
+			0x000000,
+			0.7,
+		);
+
+		// Botón "Continuar" centrado
+		this.continueBtn = this.add
+			.text(this.scale.width / 2, this.scale.height / 2, "▶️ CONTINUAR", {
+				font: "3em tres",
+				align: "center",
+			})
+			.setOrigin(0.5);
+
+		this.continueBtn.setInteractive();
+		this.continueBtn.on("pointerdown", () => this.togglePause());
+	},
+
+	/**
+	 * Oculta overlay de pausa
+	 */
+	hidePauseOverlay: function () {
+		if (this.pauseOverlay) this.pauseOverlay.destroy();
+		if (this.continueBtn) this.continueBtn.destroy();
+	},
+
+	/**
+	 * Reposiciona UI cuando cambia el tamaño de pantalla
+	 */
+	handleResize: function (gameSize) {
+		const width = gameSize.width;
+		const height = gameSize.height;
+
+		// Reposicionar texto de puntos
+		if (this.scoreText) {
+			this.scoreText.x = GameConstants.UI.MARGIN_PERCENT * width;
+		}
+
+		// Reposicionar botón de audio
+		if (this.btnAudio) {
+			this.btnAudio.x = width * GameConstants.UI.AUDIO_BTN_X_PERCENT;
+		}
+
+		// Reposicionar botón de pausa
+		if (this.btnPause) {
+			this.btnPause.x = width * GameConstants.UI.PAUSE_BTN_X_PERCENT;
+		}
+
+		// Reposicionar overlay de pausa si existe
+		if (this.pauseOverlay) {
+			this.pauseOverlay.setSize(width, height);
+			this.pauseOverlay.setPosition(width / 2, height / 2);
+		}
+
+		if (this.continueBtn) {
+			this.continueBtn.setPosition(width / 2, height / 2);
+		}
+	},
+	/**
+	 * Actualiza la puntuación y record
+	 */
+	setScore: function (newScore, fruit) {
+		// Actualizar record si es necesario
+		if (newScore > this.record) {
+			this.record = newScore;
+			localStorage.setItem("record", newScore);
+		}
+
+		// Vibrar si regresa a 0
+		if (newScore === 0 && newScore !== this.score) {
 			window.navigator.vibrate(1000);
 		}
 
-		if (!this.silence && val >= 1) {
-			this.bell.play();
+		// Reproducir sonido si suma puntos
+		if (!this.isMuted && newScore >= 1) {
+			this.sfxBell.play();
 		}
 
-		this.points = val;
-		this.myText.text = `🍊  ${this.points}\n 🏆 ${this.record}`;
-		this.myText.updateText();
+		// Actualizar puntuación
+		this.score = newScore;
+		this.scoreText.text = `🍊  ${this.score}\n 🏆 ${this.record}`;
+		this.scoreText.updateText();
 
-		el.x = Phaser.Math.Between(0.1 * realWidth, realWidth - 0.1 * realWidth);
-		el.y = 0;
+		// Reposicionar fruta al inicio
+		const margin = this.scale.width * GameConstants.UI.MARGIN_PERCENT;
+		fruit.x = Phaser.Math.Between(margin, this.scale.width - margin);
+		fruit.y = 0;
 	},
 	/**
-	 * @function createElement: crea un nuevo elemento (fruta) al inicio
-	 * - revisar si ya hay 5 frutas (lo máximo permitido)
-	 * - crear una fruta (en la parte superior)
-	 * - cambiar el color de la fruta (setTint)
-	 * - agregar evento pointerdown (click) para sumar puntos
-	 * - hacer aparecer las partículas
+	 * Crea una nueva fruta en la parte superior de la pantalla
 	 */
-	createElement: function () {
-		if (!this.elements.isFull()) {
-			let el = this.elements.create(
-				Phaser.Math.Between(0.1 * realWidth, realWidth - 0.1 * realWidth),
+	spawnFruit: function () {
+		if (!this.fruits.isFull()) {
+			const margin = this.scale.width * GameConstants.UI.MARGIN_PERCENT;
+			let fruit = this.fruits.create(
+				Phaser.Math.Between(margin, this.scale.width - margin),
 				0,
 				"elements",
 				Phaser.Math.Between(0, 3),
 			);
-			el.setName("e" + this.elements.getLength());
+			fruit.setName("fruit" + this.fruits.getLength());
 
-			const colores = [0xffaaaa, 0xac93de, 0xffdd55, 0xffffff];
-			const randomColor = colores[Math.floor(Math.random() * colores.length)];
-			el.setTint(randomColor);
+			// Color aleatorio
+			const randomColor = Phaser.Utils.Array.GetRandom(GameConstants.COLORS);
+			fruit.setTint(randomColor);
 
-			el.setInteractive();
-			el.setVisible(true);
-			el.on("pointerdown", (pointer, localX, localY, event) => {
-				this.setPoints(this.points + 1, el);
-				// Emitir partículas de forma controlada
+			// Detectar click
+			fruit.setInteractive();
+			fruit.setVisible(true);
+			fruit.on("pointerdown", (pointer) => {
+				this.setScore(this.score + 1, fruit);
+				// Emitir partículas
 				this.emitter.setPosition(pointer.x, pointer.y);
-				this.emitter.explode(5); // Solo 5 partículas por click
+				this.emitter.explode(GameConstants.PARTICLES.EMIT_COUNT);
 			});
-		} else {
-			return;
 		}
 	},
 	/**
-	 * @function interactElements: revisa si hay un elemento que esta
-	 * pasando los límites de la pantalla, si lo hay debería cambiar el puntaje a 0
+	 * Revisa si alguna fruta escapó de los límites de la pantalla
 	 */
-	interactElements: function () {
-		this.elements.children.iterate((el) => {
-			if (el.y > realHeight) {
-				this.setPoints(0, el);
+	checkFruitsOutOfBounds: function () {
+		this.fruits.children.iterate((fruit) => {
+			if (fruit.y > this.scale.height) {
+				this.setScore(0, fruit);
 			}
 		});
 	},
 	/**
-	 * @function update:
-	 * @param {number} time
-	 * @param {number} delta
-	 * @description: actualiza la velocidad y revisar si alguna fruta se escapa por los límites de la pantalla.
+	 * Actualiza el juego cada frame
 	 */
 	update: function (time, delta) {
-		// Velocidad con límite máximo para evitar problemas de rendimiento
-		let velocidad = Math.min(1 + this.points * 0.1, 15); // Max 15 px/frame
-		Phaser.Actions.IncY(this.elements.getChildren(), velocidad);
-		this.interactElements();
+		// Solo actualizar si está jugando
+		if (this.currentState !== GameState.PLAYING) {
+			return;
+		}
+
+		// Calcular velocidad con límite máximo
+		const speed =
+			GameConstants.GAMEPLAY.BASE_SPEED +
+			this.score * GameConstants.GAMEPLAY.SPEED_MULTIPLIER;
+		const cappedSpeed = Math.min(speed, GameConstants.GAMEPLAY.MAX_SPEED);
+
+		// Mover frutas hacia abajo
+		Phaser.Actions.IncY(this.fruits.getChildren(), cappedSpeed);
+
+		// Revisar si alguna fruta se escapó
+		this.checkFruitsOutOfBounds();
 	},
 });
 
 let config = {
 	type: Phaser.AUTO,
-	width: realWidth,
-	height: realHeight,
+	scale: {
+		mode: Phaser.Scale.RESIZE,
+		parent: "phaser",
+		width: "100%",
+		height: "100%",
+		autoCenter: Phaser.Scale.CENTER_BOTH,
+	},
 	pixelArt: true,
 	backgroundColor: Phaser.Display.Color.RandomRGB().color,
-	zoom: 1,
 	audio: {
 		disableWebAudio: true,
 	},
 	input: {
 		activePointers: 3,
 	},
-	pixelArt: true,
 	physics: {
 		default: "arcade",
 		arcade: {},
@@ -245,16 +404,3 @@ let config = {
 };
 
 const game = new Phaser.Game(config);
-
-/**
- * @function resize: adaptar las variables de realWidth y realHeight ante un cambio de dimensiones de pantalla
- */
-window.addEventListener(
-	"resize",
-	(evt) => {
-		realWidth = window.innerWidth;
-		realHeight = window.innerHeight;
-		game.scale.resize(realWidth, realHeight);
-	},
-	false,
-);
