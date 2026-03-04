@@ -14,7 +14,7 @@ const config = {
 		autoCenter: Phaser.Scale.CENTER_BOTH,
 	},
 	pixelArt: true,
-	backgroundColor: 0x0a0a2e, // CRT dark blue — retro arcade
+	backgroundColor: 0x05001a, // dark purple — synthwave
 	audio: {
 		disableWebAudio: true,
 	},

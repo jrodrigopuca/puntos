@@ -48,6 +48,22 @@ export default class ScoreManager {
 	}
 
 	/**
+	 * Bonus por atrapar la manzana dorada
+	 */
+	onGoldenCatch(bonus) {
+		this.consecutiveMisses = 0;
+		this.score += bonus;
+
+		if (this.score > this.record) {
+			this.record = this.score;
+			this.saveRecord();
+		}
+
+		this.scene.events.emit("scoreChanged", this.score, this.record);
+		return this.score;
+	}
+
+	/**
 	 * Aplica penalización suave al perder una fruta (Zen Mode)
 	 * Penalización = score * consecutiveMisses * PENALTY_BASE
 	 * Con tope máximo de MAX_PENALTY

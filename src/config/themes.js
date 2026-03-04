@@ -5,11 +5,11 @@
  */
 export const Themes = {
 	default: {
-		name: "Arcade",
-		background: 0x0a0a2e,
-		fruits: [0x00ffff, 0xff00ff, 0x33ff33, 0xffff00],
-		particles: [0x00ffff, 0xff00ff, 0x33ff33, 0xffff00],
-		ui: 0x00ffff,
+		name: "Synthwave",
+		background: 0x05001a,
+		fruits: [0xff00ff, 0x00ffff, 0x33ff33, 0xffff00],
+		particles: [0xff00ff, 0xcc66ff, 0x00ffff, 0xffff00],
+		ui: 0xcc66ff,
 	},
 	sunset: {
 		name: "Neon City",

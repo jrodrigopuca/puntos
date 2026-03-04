@@ -7,6 +7,7 @@ import MilestoneManager from "../managers/MilestoneManager.js";
 import FeedbackManager from "../managers/FeedbackManager.js";
 import UIManager from "../managers/UIManager.js";
 import BackgroundManager from "../managers/BackgroundManager.js";
+import GoldenFruitManager from "../managers/GoldenFruitManager.js";
 
 /**
  * Escena principal del juego - Zen Mode
@@ -25,6 +26,7 @@ export default class GameScene extends Phaser.Scene {
 		this.feedbackManager = null;
 		this.uiManager = null;
 		this.backgroundManager = null;
+		this.goldenFruitManager = null;
 
 		// Tracking
 		this.plateauMessageShown = false;
@@ -53,7 +55,7 @@ export default class GameScene extends Phaser.Scene {
 
 		// Borde de la barra (neon cyan)
 		const progressBorder = this.add.graphics();
-		progressBorder.lineStyle(2, 0x00ffff, 0.8);
+		progressBorder.lineStyle(2, 0xcc66ff, 0.8);
 		progressBorder.strokeRect(
 			this.scale.width * 0.1,
 			barY - barHeight / 2,
@@ -66,14 +68,14 @@ export default class GameScene extends Phaser.Scene {
 			.text(this.scale.width / 2, barY - 30, "LOADING", {
 				fontFamily: "tres, monospace",
 				fontSize: "18px",
-				color: "#00ffff",
+				color: "#cc66ff",
 			})
 			.setOrigin(0.5);
 
 		const progressBar = this.add.graphics();
 		this.load.on("progress", (value) => {
 			progressBar.clear();
-			progressBar.fillStyle(0x00ffff, 1);
+			progressBar.fillStyle(0xcc66ff, 1);
 			progressBar.fillRect(
 				this.scale.width * 0.1,
 				barY - barHeight / 2,
@@ -120,6 +122,7 @@ export default class GameScene extends Phaser.Scene {
 		this.feedbackManager = new FeedbackManager(this);
 		this.uiManager = new UIManager(this);
 		this.backgroundManager = new BackgroundManager(this);
+		this.goldenFruitManager = new GoldenFruitManager(this);
 
 		// Guardar record inicial para detectar nuevo récord
 		this.lastRecord = this.scoreManager.getRecord();
@@ -173,6 +176,9 @@ export default class GameScene extends Phaser.Scene {
 
 		// Escuchar cambios de tamaño
 		this.scale.on("resize", this.handleResize, this);
+
+		// Iniciar ciclo de manzana dorada
+		this.goldenFruitManager.start();
 
 		// Cambiar estado a jugando
 		this.setState(GameState.PLAYING);
@@ -229,7 +235,7 @@ export default class GameScene extends Phaser.Scene {
 			.text(0, -80, "PAUSA", {
 				fontFamily: pixelFont,
 				fontSize: "36px",
-				color: "#00ffff",
+				color: "#cc66ff",
 				stroke: "#000000",
 				strokeThickness: 4,
 			})
@@ -238,13 +244,13 @@ export default class GameScene extends Phaser.Scene {
 
 		// Botón cuadrado arcade neon
 		const btnSize = 80;
-		const btnBg = this.add.rectangle(0, 0, btnSize, btnSize, 0x0a0a2e, 0.9);
+		const btnBg = this.add.rectangle(0, 0, btnSize, btnSize, 0x05001a, 0.9);
 		btnBg.setInteractive({ useHandCursor: true });
 		this.pauseContainer.add(btnBg);
 
 		// Borde neón del botón
 		const border = this.add.graphics();
-		border.lineStyle(3, 0x00ffff, 0.8);
+		border.lineStyle(3, 0xcc66ff, 0.8);
 		border.strokeRect(-btnSize / 2, -btnSize / 2, btnSize, btnSize);
 		this.pauseContainer.add(border);
 
@@ -265,8 +271,8 @@ export default class GameScene extends Phaser.Scene {
 		this.pauseContainer.add(continueText);
 
 		// Efectos hover arcade
-		btnBg.on("pointerover", () => btnBg.setFillStyle(0x00ffff, 0.2));
-		btnBg.on("pointerout", () => btnBg.setFillStyle(0x0a0a2e, 0.9));
+		btnBg.on("pointerover", () => btnBg.setFillStyle(0xcc66ff, 0.2));
+		btnBg.on("pointerout", () => btnBg.setFillStyle(0x05001a, 0.9));
 		btnBg.on("pointerdown", () => this.togglePause());
 	}
 
@@ -313,6 +319,7 @@ export default class GameScene extends Phaser.Scene {
 			this.lastRecord = record;
 			this.uiManager.updateRecord(record);
 			this.feedbackManager.showNewRecord();
+			this.backgroundManager.onNewRecord();
 		}
 
 		// Verificar milestones
@@ -342,8 +349,8 @@ export default class GameScene extends Phaser.Scene {
 			// Vibrar suavemente
 			window.navigator.vibrate?.(200 * consecutiveMisses);
 
-			// Flash rojo en pantalla
-			this.feedbackManager.showMissFlash();
+			// Flash rojo en pantalla (escala con misses consecutivos)
+			this.feedbackManager.showMissFlash(consecutiveMisses);
 
 			// Camera shake proporcional a misses consecutivos
 			this.feedbackManager.shakeCamera(0.005 * consecutiveMisses, 150);
@@ -382,6 +389,35 @@ export default class GameScene extends Phaser.Scene {
 	}
 
 	/**
+	 * Inicializa parámetros de movimiento orgánico para una fruta.
+	 * Doble armónico de wobble + drift horizontal + velocidad de caída
+	 * individual = trayectorias únicas y naturales.
+	 */
+	initFruitMotion(fruit, x) {
+		fruit.setData("baseX", x);
+
+		// Wobble primario: balanceo lento de hoja
+		fruit.setData("wobbleAmp", Phaser.Math.FloatBetween(18, 45));
+		fruit.setData("wobbleFreq", Phaser.Math.FloatBetween(1.0, 2.2));
+		fruit.setData("wobblePhase", Math.random() * Math.PI * 2);
+
+		// Wobble secundario: perturbación rápida asimétrica
+		fruit.setData("wobble2Amp", Phaser.Math.FloatBetween(4, 14));
+		fruit.setData("wobble2Freq", Phaser.Math.FloatBetween(2.5, 4.0));
+		fruit.setData("wobble2Phase", Math.random() * Math.PI * 2);
+
+		// Drift horizontal lento (cada fruta se desplaza un poco)
+		fruit.setData("driftSpeed", Phaser.Math.FloatBetween(-0.15, 0.15));
+
+		// Spin 3D
+		fruit.setData("spinSpeed", Phaser.Math.FloatBetween(0.018, 0.048));
+		fruit.setData("spinPhase", Math.random() * Math.PI * 2);
+
+		// Multiplicador de caída individual (±12%)
+		fruit.setData("fallMult", Phaser.Math.FloatBetween(0.88, 1.12));
+	}
+
+	/**
 	 * Reposiciona una fruta al inicio de la pantalla
 	 */
 	resetFruit(fruit) {
@@ -389,29 +425,28 @@ export default class GameScene extends Phaser.Scene {
 		fruit.x = Phaser.Math.Between(margin, this.scale.width - margin);
 		fruit.y = -40;
 
-		// Nuevos parámetros aleatorios de movimiento
-		fruit.setData("baseX", fruit.x);
-		fruit.setData("wobbleAmp", Phaser.Math.Between(15, 35));
-		fruit.setData("wobbleSpeed", Phaser.Math.FloatBetween(0.015, 0.03));
-		fruit.setData("wobblePhase", Math.random() * Math.PI * 2);
-		fruit.setData("rotSpeed", Phaser.Math.FloatBetween(-0.02, 0.02));
+		// Parámetros orgánicos de movimiento
+		this.initFruitMotion(fruit, fruit.x);
+
+		// Nuevo tipo de fruta aleatorio al resetear
+		const fpf = GameConstants.GAMEPLAY.FRAMES_PER_FRUIT;
+		const newType = Phaser.Math.Between(
+			0,
+			GameConstants.GAMEPLAY.FRUIT_TYPES - 1,
+		);
+		fruit.setFrame(newType * fpf); // frame 0 de rotación (front)
+		fruit.setData("fruitType", newType);
 
 		// Animación de entrada
-		fruit.setScale(0);
+		const ts = fruit.getData("targetScale") || 2.5;
+		fruit.rotation = 0;
 		this.tweens.add({
 			targets: fruit,
-			scaleX: fruit.getData("targetScale") || 2.5,
-			scaleY: fruit.getData("targetScale") || 2.5,
+			scaleX: ts,
+			scaleY: ts,
 			duration: 300,
 			ease: "Back.easeOut",
 		});
-
-		// Reposicionar glow
-		if (fruit.getData("glow")) {
-			const glow = fruit.getData("glow");
-			glow.setPosition(fruit.x, fruit.y + 40);
-			glow.setAlpha(0.25);
-		}
 	}
 
 	/**
@@ -422,13 +457,14 @@ export default class GameScene extends Phaser.Scene {
 
 		const margin = this.scale.width * GameConstants.UI.MARGIN_PERCENT;
 		const x = Phaser.Math.Between(margin, this.scale.width - margin);
-		const fruit = this.fruits.create(
-			x,
-			-40,
-			"elements",
-			Phaser.Math.Between(0, GameConstants.GAMEPLAY.FRUIT_TYPES - 1),
+		const fpf = GameConstants.GAMEPLAY.FRAMES_PER_FRUIT;
+		const fruitType = Phaser.Math.Between(
+			0,
+			GameConstants.GAMEPLAY.FRUIT_TYPES - 1,
 		);
+		const fruit = this.fruits.create(x, -40, "elements", fruitType * fpf);
 		fruit.setName("fruit" + this.fruits.getLength());
+		fruit.setData("fruitType", fruitType);
 
 		// Escalar sprite pixel-art (32px → 80px display, 2.5x crisp)
 		const targetScale = 2.5;
@@ -444,17 +480,8 @@ export default class GameScene extends Phaser.Scene {
 			ease: "Back.easeOut",
 		});
 
-		// Datos de movimiento (wobble + rotación)
-		fruit.setData("baseX", x);
-		fruit.setData("wobbleAmp", Phaser.Math.Between(15, 35));
-		fruit.setData("wobbleSpeed", Phaser.Math.FloatBetween(0.015, 0.03));
-		fruit.setData("wobblePhase", Math.random() * Math.PI * 2);
-		fruit.setData("rotSpeed", Phaser.Math.FloatBetween(-0.02, 0.02));
-
-		// Resplandor neón debajo de la fruta
-		const glow = this.add.ellipse(x, -40 + 40, 50, 16, 0x00ffff, 0.25);
-		glow.setDepth(-1);
-		fruit.setData("glow", glow);
+		// Parámetros orgánicos de movimiento
+		this.initFruitMotion(fruit, x);
 
 		// Detectar click - usar ScoreManager
 		fruit.setInteractive();
@@ -462,6 +489,9 @@ export default class GameScene extends Phaser.Scene {
 		fruit.on("pointerdown", (pointer) => {
 			this.scoreManager.onCatch();
 			this.resetFruit(fruit);
+
+			// Reacción del fondo al tap
+			this.backgroundManager.onCatch();
 
 			// Feedback positivo con texto flotante
 			this.feedbackManager.showFloatingScore(pointer.x, pointer.y, 1, true);
@@ -508,30 +538,96 @@ export default class GameScene extends Phaser.Scene {
 		this.fruits.children.iterate((fruit) => {
 			if (!fruit) return;
 
-			// Caída vertical
-			fruit.y += speed;
+			// Caída vertical con velocidad individual
+			const fallMult = fruit.getData("fallMult") || 1.0;
+			fruit.y += speed * fallMult;
 
-			// Wobble horizontal (onda seno)
-			const phase = fruit.getData("wobblePhase") || 0;
-			const amp = fruit.getData("wobbleAmp") || 20;
-			const wobbleSpeed = fruit.getData("wobbleSpeed") || 0.02;
-			const baseX = fruit.getData("baseX") || fruit.x;
-			fruit.setData("wobblePhase", phase + wobbleSpeed);
-			fruit.x = baseX + Math.sin(phase) * amp;
+			// ── Wobble orgánico (doble armónico + drift) ──────────────
+			const wPhase = fruit.getData("wobblePhase") || 0;
+			const wAmp = fruit.getData("wobbleAmp") || 25;
+			const wFreq = fruit.getData("wobbleFreq") || 1.5;
+			const w2Phase = fruit.getData("wobble2Phase") || 0;
+			const w2Amp = fruit.getData("wobble2Amp") || 8;
+			const w2Freq = fruit.getData("wobble2Freq") || 3.0;
+			const drift = fruit.getData("driftSpeed") || 0;
+			let baseX = fruit.getData("baseX") || fruit.x;
 
-			// Rotación suave
-			const rotSpeed = fruit.getData("rotSpeed") || 0;
-			fruit.rotation += rotSpeed;
+			// Avanzar fases (por frame, consistente con el motor)
+			fruit.setData("wobblePhase", wPhase + wFreq * 0.018);
+			fruit.setData("wobble2Phase", w2Phase + w2Freq * 0.018);
 
-			// Actualizar glow
-			const glow = fruit.getData("glow");
-			if (glow) {
-				glow.x = fruit.x;
-				glow.y = fruit.y + 40;
-				// Pulso sutil de opacidad
-				glow.alpha = 0.15 + Math.sin(phase * 2) * 0.1;
-			}
+			// Drift lento — clamp a márgenes de pantalla
+			baseX += drift;
+			const mX = this.scale.width * GameConstants.UI.MARGIN_PERCENT;
+			baseX = Phaser.Math.Clamp(baseX, mX, this.scale.width - mX);
+			fruit.setData("baseX", baseX);
+
+			// Posición X = base + seno primario + seno secundario
+			fruit.x = baseX + Math.sin(wPhase) * wAmp + Math.sin(w2Phase) * w2Amp;
+
+			// ── Rotación 2.5D con multi-frame ─────────────────────────────
+			// 12 frames cubren 0°→180°; el motor los recorre ida y vuelta
+			// para completar 360°. Pipeline de volumen 3D:
+			//
+			//  1. frame    ← selección por fase normalizada
+			//  2. scaleX   ← compresión elipsoidal en canto
+			//  3. scaleY   ← estiramiento cuadrático de canto
+			//  4. rotation ← tumble Z (cabeceo + micro-wobble)
+			//  5. tint     ← iluminación 4-esquina (horizontal + vertical)
+
+			const spinPhase = fruit.getData("spinPhase") || 0;
+			const spinSpeed = fruit.getData("spinSpeed") || 0.03;
+			fruit.setData("spinPhase", spinPhase + spinSpeed);
+			const ts = fruit.getData("targetScale") || 2.5;
+
+			// Fase normalizada [0, 2π)
+			const TWO_PI = Math.PI * 2;
+			const normPhase = ((spinPhase % TWO_PI) + TWO_PI) % TWO_PI;
+			const sinPhase = Math.sin(normPhase);
+
+			// edge: 0 = front/back (ancho), 1 = canto (fino)
+			const edge = Math.abs(sinPhase);
+
+			// [1] Selección de frame (front→side→back→side→front)
+			const fpf = GameConstants.GAMEPLAY.FRAMES_PER_FRUIT;
+			const fruitType = fruit.getData("fruitType") || 0;
+			const halfT = normPhase / Math.PI; // 0→2
+			const frameT = halfT <= 1.0 ? halfT : 2.0 - halfT; // 0→1→0
+			const rotIdx = Math.min(fpf - 1, Math.floor(frameT * fpf));
+			fruit.setFrame(fruitType * fpf + rotIdx);
+
+			// [2] Compresión horizontal: D=0.68 → de frente:1.0, canto:0.68
+			//     Fruta esférica mantiene volumen, no es un disco.
+			const D = 0.68;
+			const D2 = D * D;
+			const width = Math.sqrt(D2 + (1 - D2) * (1 - edge * edge));
+			fruit.scaleX = ts * width;
+
+			// [3] Estiramiento vertical sutil: +6% en canto
+			fruit.scaleY = ts * (1 + edge * edge * 0.06);
+
+			// [4] Tumble Z: cabeceo ±6.5° + micro-wobble en canto
+			fruit.rotation =
+				Math.sin(normPhase * 2) * 0.11 + edge * 0.04 * Math.sin(normPhase * 3);
+
+			// [5] Iluminación 4-esquina: horizontal (dirección giro) + vertical (cenital)
+			const baseB = 130 + (1 - edge) * 125; // 130 canto → 255 frente
+			const hDir = sinPhase * (55 + (1 - edge) * 20); // lateral fuerte
+			const vDir = 22; // sesgo top-light constante
+			const TL = Math.floor(Math.min(255, Math.max(75, baseB + hDir + vDir)));
+			const TR = Math.floor(Math.min(255, Math.max(75, baseB - hDir + vDir)));
+			const BL = Math.floor(Math.min(255, Math.max(75, baseB + hDir - vDir)));
+			const BR = Math.floor(Math.min(255, Math.max(75, baseB - hDir - vDir)));
+			fruit.setTint(
+				(TL << 16) | (TL << 8) | TL,
+				(TR << 16) | (TR << 8) | TR,
+				(BL << 16) | (BL << 8) | BL,
+				(BR << 16) | (BR << 8) | BR,
+			);
 		});
+
+		// Actualizar manzana dorada
+		this.goldenFruitManager.update(speed);
 
 		this.checkFruitsOutOfBounds();
 	}

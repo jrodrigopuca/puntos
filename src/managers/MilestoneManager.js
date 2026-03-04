@@ -53,7 +53,7 @@ export default class MilestoneManager {
 
 		// Temas de color (background colors — CRT dark neon)
 		this.themes = {
-			default: 0x0a0a2e,
+			default: 0x05001a,
 			sunset: 0x1a0a1a,
 			forest: 0x0a1a0a,
 			night: 0x05051a,

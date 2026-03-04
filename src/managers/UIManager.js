@@ -29,9 +29,9 @@ export default class UIManager {
 
 		// Configuración visual (retro arcade 80s / CRT neon)
 		this.config = {
-			panelColor: 0x0a0a2e,
+			panelColor: 0x05001a,
 			panelAlpha: 0.9,
-			borderColor: 0x00ffff,
+			borderColor: 0xcc66ff,
 			borderAlpha: 0.8,
 			borderWidth: 2,
 			iconSize: 36,
@@ -205,25 +205,25 @@ export default class UIManager {
 	 */
 	createButton(x, y, size, callback) {
 		// Botón cuadrado arcade
-		const btn = this.scene.add.rectangle(x, y, size, size, 0x0a0a2e, 0.8);
+		const btn = this.scene.add.rectangle(x, y, size, size, 0x05001a, 0.8);
 		btn.setInteractive({ useHandCursor: true });
 
 		// Borde neón
 		const border = this.scene.add.graphics();
-		border.lineStyle(2, 0x00ffff, 0.6);
+		border.lineStyle(2, 0xcc66ff, 0.6);
 		border.strokeRect(x - size / 2, y - size / 2, size, size);
 
 		// Efectos hover/press arcade
 		btn.on("pointerover", () => {
-			btn.setFillStyle(0x00ffff, 0.2);
+			btn.setFillStyle(0xcc66ff, 0.2);
 		});
 
 		btn.on("pointerout", () => {
-			btn.setFillStyle(0x0a0a2e, 0.8);
+			btn.setFillStyle(0x05001a, 0.8);
 		});
 
 		btn.on("pointerdown", () => {
-			btn.setFillStyle(0x00ffff, 0.4);
+			btn.setFillStyle(0xcc66ff, 0.4);
 			this.scene.tweens.add({
 				targets: btn,
 				scaleX: 0.9,

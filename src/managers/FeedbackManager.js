@@ -43,21 +43,105 @@ export default class FeedbackManager {
 	/**
 	 * Flash rojo en la pantalla al perder (estilo Piano Tiles)
 	 */
-	showMissFlash() {
+	showMissFlash(consecutiveMisses = 1) {
+		// Duración e intensidad escalan con misses consecutivos
+		const baseDuration = 300;
+		const duration = Math.min(baseDuration + consecutiveMisses * 150, 900);
+		const alpha = Math.min(0.3 + consecutiveMisses * 0.08, 0.6);
+
 		const flash = this.scene.add.rectangle(
 			this.scene.scale.width / 2,
 			this.scene.scale.height / 2,
 			this.scene.scale.width,
 			this.scene.scale.height,
 			0xff0000,
-			0.3,
+			alpha,
 		);
 
 		this.scene.tweens.add({
 			targets: flash,
 			alpha: 0,
-			duration: 300,
+			duration: duration,
 			onComplete: () => flash.destroy(),
+		});
+	}
+
+	/**
+	 * Feedback especial al atrapar la manzana dorada
+	 */
+	showGoldenCatch(x, y, bonus) {
+		// Flash dorado en pantalla
+		const flash = this.scene.add.rectangle(
+			this.scene.scale.width / 2,
+			this.scene.scale.height / 2,
+			this.scene.scale.width,
+			this.scene.scale.height,
+			0xffcc00,
+			0.2,
+		);
+		flash.setDepth(100);
+		this.scene.tweens.add({
+			targets: flash,
+			alpha: 0,
+			duration: 500,
+			onComplete: () => flash.destroy(),
+		});
+
+		// Texto "+3 BONUS" grande y dorado
+		const bonusText = this.scene.add
+			.text(x, y - 20, `+${bonus}`, {
+				font: "5em tres",
+				color: "#ffcc00",
+				stroke: "#000000",
+				strokeThickness: 6,
+			})
+			.setOrigin(0.5)
+			.setDepth(101);
+
+		this.scene.tweens.add({
+			targets: bonusText,
+			y: y - 120,
+			scaleX: 1.5,
+			scaleY: 1.5,
+			alpha: 0,
+			duration: 1200,
+			ease: "Power2",
+			onComplete: () => bonusText.destroy(),
+		});
+
+		// Texto "BONUS" debajo
+		const labelText = this.scene.add
+			.text(x, y + 20, "BONUS", {
+				font: "2.5em tres",
+				color: "#ffee88",
+				stroke: "#000000",
+				strokeThickness: 4,
+			})
+			.setOrigin(0.5)
+			.setDepth(101);
+
+		this.scene.tweens.add({
+			targets: labelText,
+			y: y - 60,
+			alpha: 0,
+			duration: 1000,
+			delay: 200,
+			ease: "Power2",
+			onComplete: () => labelText.destroy(),
+		});
+
+		// Anillo de expansión dorado
+		const ring = this.scene.add.circle(x, y, 30, 0xffcc00, 0);
+		ring.setStrokeStyle(3, 0xffcc00, 0.8);
+		ring.setDepth(100);
+		this.scene.tweens.add({
+			targets: ring,
+			scaleX: 4,
+			scaleY: 4,
+			alpha: 0,
+			duration: 700,
+			ease: "Power2",
+			onComplete: () => ring.destroy(),
 		});
 	}
 
@@ -127,12 +211,12 @@ export default class FeedbackManager {
 
 		// Background arcade (dark panel with neon border)
 		const bg = this.scene.add
-			.rectangle(0, 0, 350, 120, 0x0a0a2e, 0.9)
+			.rectangle(0, 0, 350, 120, 0x05001a, 0.9)
 			.setOrigin(0.5);
 
 		// Borde neón
 		const border = this.scene.add.graphics();
-		border.lineStyle(2, 0x00ffff, 0.7);
+		border.lineStyle(2, 0xcc66ff, 0.7);
 		border.strokeRect(-175, -60, 350, 120);
 		container.add(border);
 
@@ -140,7 +224,7 @@ export default class FeedbackManager {
 		const titleText = this.scene.add
 			.text(0, -25, title, {
 				font: "2.5em tres",
-				color: "#00ffff",
+				color: "#cc66ff",
 				stroke: "#000000",
 				strokeThickness: 4,
 			})
