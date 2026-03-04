@@ -109,6 +109,8 @@ export default class GameScene extends Phaser.Scene {
 		this.load.svg("icon-sound-off", "img/ui/icon-sound-off.svg");
 		this.load.svg("icon-fruit", "img/ui/icon-fruit.svg");
 		this.load.svg("icon-trophy", "img/ui/icon-trophy.svg");
+		this.load.svg("icon-fullscreen", "img/ui/icon-fullscreen.svg");
+		this.load.svg("icon-exitfullscreen", "img/ui/icon-exitfullscreen.svg");
 	}
 
 	/**

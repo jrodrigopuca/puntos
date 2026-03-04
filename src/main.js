@@ -19,7 +19,7 @@ const config = {
 		noAudio: true, // Audio 100% programático via SynthAudio/SynthMusic
 	},
 	input: {
-		activePointers: 3,
+		activePointers: 6,
 	},
 	scene: GameScene,
 };

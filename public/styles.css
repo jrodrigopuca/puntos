@@ -3,6 +3,10 @@ body{
     padding: 0;
     background-color: #05001a;
     overflow:hidden;
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 #phaser{
@@ -12,6 +16,7 @@ body{
     overflow:hidden;
     image-rendering: pixelated;
     image-rendering: crisp-edges;
+    touch-action: none;
 }
 
 @font-face{

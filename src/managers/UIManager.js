@@ -21,8 +21,10 @@ export default class UIManager {
 		this.recordText = null;
 		this.btnSound = null;
 		this.btnPause = null;
+		this.btnFullscreen = null;
 		this.soundIcon = null;
 		this.pauseIcon = null;
+		this.fullscreenIcon = null;
 
 		// Estado
 		this.isMuted = true;
@@ -58,6 +60,7 @@ export default class UIManager {
 
 	/**
 	 * Crea el panel de puntuación (esquina superior izquierda)
+	 * El fondo se redibuja dinámicamente para ajustarse al contenido.
 	 */
 	createScorePanel(score, record) {
 		const {
@@ -72,29 +75,22 @@ export default class UIManager {
 			fontFamily,
 		} = this.config;
 
-		// Calcular dimensiones del panel
-		const panelWidth = 170;
-		const panelHeight = 84;
-
 		// Container para todo el panel
 		this.scorePanel = this.scene.add.container(margin, margin);
 
-		// Fondo del panel (rectángulo con borde pixel)
-		const bg = this.scene.add.graphics();
-		bg.fillStyle(panelColor, panelAlpha);
-		bg.fillRect(0, 0, panelWidth, panelHeight);
-		bg.lineStyle(borderWidth, borderColor, borderAlpha);
-		bg.strokeRect(0, 0, panelWidth, panelHeight);
-		this.scorePanel.add(bg);
+		// Fondo (se redibuja en _resizeScorePanel)
+		this.scorePanelBg = this.scene.add.graphics();
+		this.scorePanel.add(this.scorePanelBg);
 
-		// Fila 1: Score
+		// Fila 1: Score — icono + texto
+		const row1Y = padding + iconSize / 2;
 		this.scoreIcon = this.scene.add
-			.image(padding + iconSize / 2, padding + iconSize / 2, "icon-fruit")
+			.image(padding + iconSize / 2, row1Y, "icon-fruit")
 			.setDisplaySize(iconSize, iconSize);
 		this.scorePanel.add(this.scoreIcon);
 
 		this.scoreText = this.scene.add
-			.text(padding + iconSize + 8, padding + iconSize / 2, String(score), {
+			.text(padding + iconSize + 8, row1Y, String(score), {
 				fontFamily: fontFamily,
 				fontSize: "26px",
 				color: this.config.scoreColor,
@@ -104,38 +100,66 @@ export default class UIManager {
 			.setOrigin(0, 0.5);
 		this.scorePanel.add(this.scoreText);
 
-		// Fila 2: Record
+		// Fila 2: Record — icono + texto
+		const smallIcon = iconSize - 6;
+		const row2Y = padding + iconSize + 6 + smallIcon / 2;
 		this.trophyIcon = this.scene.add
-			.image(
-				padding + iconSize / 2,
-				padding + iconSize + 6 + iconSize / 2,
-				"icon-trophy",
-			)
-			.setDisplaySize(iconSize - 6, iconSize - 6);
+			.image(padding + iconSize / 2, row2Y, "icon-trophy")
+			.setDisplaySize(smallIcon, smallIcon);
 		this.scorePanel.add(this.trophyIcon);
 
 		this.recordText = this.scene.add
-			.text(
-				padding + iconSize + 8,
-				padding + iconSize + 6 + iconSize / 2,
-				String(record),
-				{
-					fontFamily: fontFamily,
-					fontSize: "20px",
-					color: this.config.recordColor,
-					stroke: "#000000",
-					strokeThickness: 3,
-				},
-			)
+			.text(padding + iconSize + 8, row2Y, String(record), {
+				fontFamily: fontFamily,
+				fontSize: "20px",
+				color: this.config.recordColor,
+				stroke: "#000000",
+				strokeThickness: 3,
+			})
 			.setOrigin(0, 0.5);
 		this.scorePanel.add(this.recordText);
+
+		// Dibujar fondo ajustado al contenido
+		this._resizeScorePanel();
 
 		// Hacer el panel con profundidad alta para estar sobre el juego
 		this.scorePanel.setDepth(100);
 	}
 
 	/**
+	 * Redibuja el fondo del score panel ajustándose al texto más ancho.
+	 */
+	_resizeScorePanel() {
+		if (!this.scorePanelBg) return;
+		const {
+			padding,
+			iconSize,
+			panelColor,
+			panelAlpha,
+			borderColor,
+			borderAlpha,
+			borderWidth,
+		} = this.config;
+
+		const textRight = padding + iconSize + 8;
+		const maxTextW = Math.max(
+			this.scoreText?.width || 0,
+			this.recordText?.width || 0,
+		);
+		const panelWidth = textRight + maxTextW + padding;
+		const smallIcon = iconSize - 6;
+		const panelHeight = padding + iconSize + 6 + smallIcon + padding;
+
+		this.scorePanelBg.clear();
+		this.scorePanelBg.fillStyle(panelColor, panelAlpha);
+		this.scorePanelBg.fillRect(0, 0, panelWidth, panelHeight);
+		this.scorePanelBg.lineStyle(borderWidth, borderColor, borderAlpha);
+		this.scorePanelBg.strokeRect(0, 0, panelWidth, panelHeight);
+	}
+
+	/**
 	 * Crea el panel de controles (esquina superior derecha)
+	 * 3 botones: sonido | fullscreen | pausa
 	 */
 	createControlPanel() {
 		const {
@@ -149,8 +173,9 @@ export default class UIManager {
 			borderWidth,
 		} = this.config;
 
-		// Calcular dimensiones
-		const panelWidth = buttonSize * 2 + padding * 3;
+		// Calcular dimensiones (3 botones)
+		const numButtons = 3;
+		const panelWidth = buttonSize * numButtons + padding * (numButtons + 1);
 		const panelHeight = buttonSize + padding * 2;
 		const panelX = this.scene.scale.width - margin - panelWidth;
 
@@ -181,8 +206,34 @@ export default class UIManager {
 			.setDisplaySize(buttonSize - 16, buttonSize - 16);
 		this.controlPanel.add(this.soundIcon);
 
+		// Botón de fullscreen (solo si la API está disponible)
+		const fsBtnX = padding * 2 + buttonSize + buttonSize / 2;
+		const fsBtnY = padding + buttonSize / 2;
+
+		if (this._canFullscreen()) {
+			this.btnFullscreen = this.createButton(fsBtnX, fsBtnY, buttonSize, () =>
+				this.toggleFullscreen(),
+			);
+			this.controlPanel.add(this.btnFullscreen);
+			if (this.btnFullscreen._pixelBorder)
+				this.controlPanel.add(this.btnFullscreen._pixelBorder);
+
+			this.fullscreenIcon = this.scene.add
+				.image(fsBtnX, fsBtnY, "icon-fullscreen")
+				.setDisplaySize(buttonSize - 16, buttonSize - 16);
+			this.controlPanel.add(this.fullscreenIcon);
+
+			// Escuchar cambio de fullscreen externo (Escape, etc.)
+			document.addEventListener("fullscreenchange", () =>
+				this._onFullscreenChange(),
+			);
+			document.addEventListener("webkitfullscreenchange", () =>
+				this._onFullscreenChange(),
+			);
+		}
+
 		// Botón de pausa
-		const pauseBtnX = padding * 2 + buttonSize + buttonSize / 2;
+		const pauseBtnX = padding * 3 + buttonSize * 2 + buttonSize / 2;
 		const pauseBtnY = padding + buttonSize / 2;
 
 		this.btnPause = this.createButton(pauseBtnX, pauseBtnY, buttonSize, () =>
@@ -268,6 +319,7 @@ export default class UIManager {
 	 */
 	updateScore(score) {
 		this.scoreText.setText(String(score));
+		this._resizeScorePanel();
 
 		// Efecto de pulso
 		this.scene.tweens.add({
@@ -284,6 +336,7 @@ export default class UIManager {
 	 */
 	updateRecord(record) {
 		this.recordText.setText(String(record));
+		this._resizeScorePanel();
 
 		// Efecto especial para nuevo récord
 		this.scene.tweens.add({
@@ -311,12 +364,60 @@ export default class UIManager {
 	 */
 	handleResize(gameSize) {
 		const { margin, padding, buttonSize } = this.config;
-		const panelWidth = buttonSize * 2 + padding * 3;
+		const numButtons = this._canFullscreen() ? 3 : 2;
+		const panelWidth = buttonSize * numButtons + padding * (numButtons + 1);
 
 		// Reposicionar panel de controles
 		if (this.controlPanel) {
 			this.controlPanel.x = gameSize.width - margin - panelWidth;
 		}
+	}
+
+	/* ── Fullscreen ──────────────────────────────── */
+
+	/**
+	 * Detecta si la Fullscreen API está disponible
+	 */
+	_canFullscreen() {
+		return !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+	}
+
+	/**
+	 * Toggle pantalla completa
+	 */
+	toggleFullscreen() {
+		const doc = document;
+		const el = document.documentElement;
+
+		if (doc.fullscreenElement || doc.webkitFullscreenElement) {
+			// Salir de fullscreen
+			if (doc.exitFullscreen) doc.exitFullscreen();
+			else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
+		} else {
+			// Entrar a fullscreen (con lock de orientación si es posible)
+			const promise = el.requestFullscreen
+				? el.requestFullscreen()
+				: el.webkitRequestFullscreen
+					? el.webkitRequestFullscreen()
+					: Promise.resolve();
+
+			promise?.then?.(() => {
+				// Intentar bloquear orientación landscape en móviles
+				screen.orientation?.lock?.("landscape").catch(() => {});
+			});
+		}
+	}
+
+	/**
+	 * Sincroniza el icono cuando cambia el estado de fullscreen
+	 */
+	_onFullscreenChange() {
+		if (!this.fullscreenIcon) return;
+		const isFS =
+			!!document.fullscreenElement || !!document.webkitFullscreenElement;
+		this.fullscreenIcon.setTexture(
+			isFS ? "icon-exitfullscreen" : "icon-fullscreen",
+		);
 	}
 
 	/**
