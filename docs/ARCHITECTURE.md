@@ -17,15 +17,16 @@
 
 ## Descripción General
 
-**Puntos** es un juego casual web tipo "Zen Mode" desarrollado con PhaserJS 3.90. El objetivo es hacer tap en las frutas pixel-art que caen con rotación pseudo-3D antes de que escapen por el fondo. Diseñado como experiencia anti-estrés: sin game over abrupto, velocidad con plateau, y penalización gradual.
+**Puntos** es un juego casual web tipo "Zen Mode" desarrollado con PhaserJS 3.90. El objetivo es hacer tap en las frutas pixel-art que caen con rotación 2.5D antes de que escapen por el fondo. Diseñado como experiencia anti-estrés: sin game over abrupto, velocidad con plateau, penalización gradual y audio generativo.
 
 ### Características principales
 
 - 🧘 Zen Mode: sin game over frustrante, penalización porcentual suave
 - 🍎 8 frutas pixel-art + manzana dorada bonus (cada ~12s, +3 pts)
-- 🔄 Rotación 2.5D con proyección físicamente correcta y sprites dual-view
+- 🔄 Rotación 2.5D con 12 frames por fruta (108 frames totales)
 - 🎨 Estética retro synthwave 80s (paleta púrpura neón)
-- 📱 Mobile-first (touch-only, 3 pointers simultáneos)
+- 📱 Mobile-first: multi-touch (6 pointers) y botón de pantalla completa
+- 🎵 Audio 100% programático (Web Audio): música generativa + SFX armonizados
 - 🏆 Sistema de récord persistente (localStorage) con gradientes de fondo
 - 🎯 Milestones cada 50 puntos con cambio de tema
 
@@ -66,27 +67,28 @@
 
 La arquitectura sigue un patrón **Scene + Managers**: una única escena (`GameScene`) orquesta 7 managers especializados. Cada manager encapsula una responsabilidad:
 
-| Manager                | Responsabilidad                                        |
-| ---------------------- | ------------------------------------------------------ |
-| `ScoreManager`         | Puntuación, récord, penalización suave (-10% por miss) |
-| `ZenDifficultyManager` | Curva de velocidad logarítmica con plateau             |
-| `MilestoneManager`     | Hitos cada 50 pts, cambio de tema                      |
-| `FeedbackManager`      | Texto flotante "+N", flash rojo, efectos dorados       |
-| `UIManager`            | Paneles de score/record, botones audio/pausa           |
-| `BackgroundManager`    | Grid neón, floating particles, gradientes de récord    |
-| `GoldenFruitManager`   | Manzana dorada bonus (spawn, rotación, sparkles)       |
+| Manager                | Responsabilidad                                                  |
+| ---------------------- | ---------------------------------------------------------------- |
+| `ScoreManager`         | Puntuación, récord, penalización suave (-10% por miss)           |
+| `ZenDifficultyManager` | Curva de velocidad logarítmica con plateau                       |
+| `MilestoneManager`     | Hitos cada 50 pts, cambio de tema                                |
+| `FeedbackManager`      | Texto flotante "+N", flash (color tema), efectos dorados         |
+| `UIManager`            | Panel score/record autoajustable, botones audio/pausa/fullscreen |
+| `BackgroundManager`    | Grid neón, floating particles, gradientes de récord              |
+| `GoldenFruitManager`   | Manzana dorada bonus (spawn, rotación, sparkles)                 |
 
 ---
 
 ## Stack Tecnológico
 
-| Tecnología   | Versión | Propósito                       |
-| ------------ | ------- | ------------------------------- |
-| PhaserJS     | 3.90.0  | Motor de juegos 2D              |
-| Vite         | 7.3.1   | Build system + dev server (HMR) |
-| ES Modules   | ES6+    | Modularización nativa           |
-| Python 3     | -       | Generación de spritesheets      |
-| localStorage | -       | Persistencia del récord         |
+| Tecnología    | Versión | Propósito                       |
+| ------------- | ------- | ------------------------------- |
+| PhaserJS      | 3.90.0  | Motor de juegos 2D              |
+| Vite          | 7.3.1   | Build system + dev server (HMR) |
+| Web Audio API | -       | Música generativa + SFX         |
+| ES Modules    | ES6+    | Modularización nativa           |
+| Python 3      | -       | Generación de spritesheets      |
+| localStorage  | -       | Persistencia del récord         |
 
 ### Configuración de Phaser
 
@@ -96,7 +98,8 @@ La arquitectura sigue un patrón **Scene + Managers**: una única escena (`GameS
     scale: { mode: Phaser.Scale.RESIZE },  // Responsive automático
     pixelArt: true,                         // Nearest-neighbor sampling
     backgroundColor: 0x05001a,              // Dark purple synthwave
-    input: { activePointers: 3 },           // Multi-touch
+    audio: { noAudio: true },               // Audio propio (Web Audio)
+    input: { activePointers: 6 },           // Multi-touch
 }
 ```
 
@@ -126,16 +129,13 @@ puntos/
 │       ├── BackgroundManager.js    # Grid neón + partículas flotantes
 │       └── GoldenFruitManager.js   # Manzana dorada bonus
 ├── public/                         # Assets estáticos (Vite publicDir)
-│   ├── audio/
-│   │   ├── accept.mp3              # SFX al atrapar fruta
-│   │   └── tema.mp3                # Música de fondo
 │   ├── font/
 │   │   └── 8BitArtSansNeue.ttf     # Fuente pixel "tres"
 │   ├── img/
-│   │   ├── elementos.png           # Spritesheet 576×32 (18 frames)
+│   │   ├── elementos.png           # Spritesheet 3456×32 (108 frames, 9 frutas × 12)
 │   │   ├── files.png               # Spritesheet partículas 40×8 (5 frames)
 │   │   ├── favicon.svg             # Icono del sitio
-│   │   └── ui/                     # Iconos SVG de UI
+│   │   └── ui/                     # Iconos SVG de UI (sonido, pausa, fullscreen, etc.)
 │   └── styles.css                  # @font-face + estilos base
 ├── tools/
 │   └── generate_sprites.py         # Generador de spritesheets (Python puro)
@@ -150,18 +150,17 @@ puntos/
 
 ### GameScene (`src/scenes/GameScene.js`)
 
-Escena principal (~580 líneas). Orquesta todos los managers y contiene el game loop.
+Escena principal (~700 líneas). Orquesta managers, audio programático y loop.
 
 #### Ciclo de Métodos
 
-| Método                     | Responsabilidad                                            |
-| -------------------------- | ---------------------------------------------------------- |
-| `preload()`                | Carga assets + barra de progreso arcade                    |
-| `create()`                 | Inicializa managers, frutas, audio, partículas, input      |
-| `update()`                 | Game loop: movimiento, rotación 2.5D, colisiones           |
-| `handleTap()`              | Detección de tap en frutas (hit-test manual por distancia) |
-| `resetFruit()`             | Reposiciona fruta arriba con nuevo tipo aleatorio          |
-| `checkFruitsOutOfBounds()` | Detecta frutas que escaparon → penalización                |
+| Método                     | Responsabilidad                                          |
+| -------------------------- | -------------------------------------------------------- |
+| `preload()`                | Carga sprites, partículas, iconos UI, barra de progreso  |
+| `create()`                 | Inicializa managers, frutas, audio Web Audio, partículas |
+| `update()`                 | Game loop: caída, wobble, rotación 2.5D, bounds check    |
+| `resetFruit()`             | Reposiciona fruta arriba con nuevo tipo aleatorio        |
+| `checkFruitsOutOfBounds()` | Detecta frutas que escaparon → penalización zen          |
 
 #### Pool de Frutas
 
@@ -190,7 +189,7 @@ Manzana dorada que aparece cada ~12s (±3s varianza):
 
 ## Sistema Visual 2.5D
 
-Las frutas simulan rotación tridimensional usando un stack de transformaciones 2D aplicadas cada frame. El sistema combina proyección geométrica real con trucos visuales para lograr una ilusión convincente de profundidad.
+Las frutas simulan rotación tridimensional con sprites de 12 frames por fruta y un stack de transformaciones 2D por frame. Combina proyección geométrica y tints por esquina para mantener volumen y luz.
 
 ### 1. Proyección de Ancho (Ellipsoid Projection)
 
@@ -200,7 +199,7 @@ En lugar de usar `cos(θ)` directamente como ancho (que colapsa a cero de canto)
 width(θ) = √(D² + (1 − D²) · cos²(θ))
 ```
 
-Donde **D = 0.55** es la razón profundidad/ancho de la fruta. Esto produce:
+Donde **D = 0.68** es la razón profundidad/ancho de la fruta. Esto produce:
 
 - **De frente** (θ = 0): width = 1.0 (ancho completo)
 - **De canto** (θ = π/2): width = 0.55 (55% del ancho, nunca colapsa)
@@ -220,40 +219,37 @@ fruit.scaleX = targetScale * width * Math.sign(cosVal);
 - Aún con side sprites, `scaleX ≈ 0` aplasta cualquier sprite
 - La fórmula elipsoidal mantiene volumen visible en todo ángulo
 
-### 2. Squash Y Cuadrático
+### 2. Squash Y Sutil
 
-Cuando la fruta pasa de canto, se estira levemente en Y (12% max) simulando perspectiva de un disco visto de perfil:
-
-```javascript
-const edge = 1 - absCos;
-fruit.scaleY = targetScale * (1 + edge * edge * 0.12);
-```
-
-El término cuadrático (`edge²`) concentra el efecto cerca del borde, evitando distorsión de frente.
-
-### 3. Frame Swap con Alpha Dip
-
-Dos conjuntos de sprites (frontal y lateral) se intercambian suavemente:
-
-- **Umbral**: `absCos < 0.38` → muestra sprite side-view
-- **Alpha dip**: en la zona ±0.10 del umbral, el alpha baja suavemente a 0.82 para enmascarar el cambio instantáneo de sprite (simula motion blur)
+Cuando la fruta pasa de canto, se estira levemente en Y (≈6%) para mantener volumen:
 
 ```javascript
-const SWAP_TH = 0.38;
-const BLEND = 0.1;
-fruit.setFrame(absCos < SWAP_TH ? sideFrame : frontFrame);
-const distSwap = Math.abs(absCos - SWAP_TH);
-fruit.alpha = distSwap < BLEND ? 0.82 + 0.18 * (distSwap / BLEND) : 1.0;
+const edge = Math.abs(Math.sin(normPhase));
+fruit.scaleY = targetScale * (1 + edge * edge * 0.06);
 ```
 
-**¿Por qué 0.38?** Es el punto donde el front sprite ya está suficientemente comprimido horizontalmente para que el swap sea visualmente imperceptible.
+### 3. Selección de frame
+
+12 frames cubren 0→180°; el motor los recorre ida y vuelta (0→11→0) para completar 360°, sin alpha-dip ni swaps.
 
 ### 4. Tumble Z
 
-Rotación sutil en eje Z sincronizada al doble de frecuencia del spin. Simula un eje de giro imperfecto (como una fruta real cayendo):
+Cabeceo ±6.5° con micro-wobble dependiente del canto:
 
 ```javascript
-fruit.rotation = Math.sin(spinPhase * 2) * 0.08; // ±4.5°
+fruit.rotation =
+	Math.sin(normPhase * 2) * 0.11 + edge * 0.04 * Math.sin(normPhase * 3);
+```
+
+### 5. Iluminación 4 esquinas
+
+Tint per-corner modulado por la dirección del giro y un bias cenital:
+
+```javascript
+const baseB = 130 + (1 - edge) * 125;
+const hDir = Math.sin(normPhase) * (55 + (1 - edge) * 20);
+const vDir = 22;
+fruit.setTint(TL, TR, BL, BR);
 ```
 
 ### 5. Iluminación Direccional por Esquina
@@ -430,6 +426,7 @@ Velocidad (px/frame)
 | Tap en manzana dorada | +3 pts bonus, flash dorado, anillo expandible      |
 | Fruta escapa          | -N% score, flash rojo (escala con misses seguidos) |
 | Tap icono audio       | Toggle música y efectos                            |
+| Tap icono fullscreen  | Entrar/salir de pantalla completa                  |
 | Tap icono pausa       | Pausar/reanudar juego                              |
 
 ---
@@ -438,16 +435,16 @@ Velocidad (px/frame)
 
 Estética **retro synthwave 80s**:
 
-| Elemento         | Color       | Hex/Valor              |
-| ---------------- | ----------- | ---------------------- |
-| Fondo            | Deep purple | `#05001a`              |
-| Fondo gradiente  | Dark purple | `#120630`              |
-| Acento principal | Neon purple | `#cc66ff`              |
-| Grid del fondo   | Purple dim  | `0x1a0040` (15% alpha) |
-| Texto UI         | White       | `#ffffff`              |
-| Borde paneles    | Neon purple | `#cc66ff`              |
-| Miss flash       | Red         | `0xff0000`             |
-| Golden fruit     | Gold        | `0xffcc00`             |
+| Elemento         | Color         | Hex/Valor              |
+| ---------------- | ------------- | ---------------------- |
+| Fondo            | Deep purple   | `#05001a`              |
+| Fondo gradiente  | Dark purple   | `#120630`              |
+| Acento principal | Neon purple   | `#cc66ff`              |
+| Grid del fondo   | Purple dim    | `0x1a0040` (15% alpha) |
+| Texto UI         | White         | `#ffffff`              |
+| Borde paneles    | Neon purple   | `#cc66ff`              |
+| Miss flash       | Color de tema | (transparente, zen)    |
+| Golden fruit     | Gold          | `0xffcc00`             |
 
 ### Fuente
 
@@ -476,7 +473,7 @@ npm run build
 
 ```bash
 python3 tools/generate_sprites.py
-# → public/img/elementos.png (576×32)
+# → public/img/elementos.png (3456×32)
 # → public/img/files.png     (40×8)
 ```
 

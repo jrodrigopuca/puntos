@@ -8,20 +8,20 @@ Un juego **anti-estrés** donde nunca pierdes abruptamente. La dificultad alcanz
 
 **Características principales:**
 
-- ✨ Sin game over frustrante (penalización gradual)
-- 🎯 Velocidad con techo (nunca imposible)
+- ✨ Sin game over frustrante (penalización gradual tipo Zen Mode)
+- 🔄 Rotación 2.5D con sprites de 12 frames por fruta
+- 📱 Mobile-first: multi-touch (6 pointers) y botón de pantalla completa
 - 🎨 Milestones cada 50 puntos (cambio de tema)
-- 🎵 Música adaptativa al progreso
+- 🎵 Audio 100% programático (música generativa + SFX armonizados)
 
 Ver [Plan de Mejora sección 4.0](docs/IMPROVEMENT_PLAN.md#-fase-4-mejoras-de-gameplay-semana-7-8) para detalles de diseño.
 
 ## Cómo ejecutar
 
 ```bash
-cd pwa
-# Requiere http-server: npm install -g http-server
-http-server .
-# Abrir http://localhost:8080
+npm install
+npm run dev
+# Abre http://localhost:8080
 ```
 
 ## Documentación
