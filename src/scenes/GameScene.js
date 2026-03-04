@@ -141,9 +141,9 @@ export default class GameScene extends Phaser.Scene {
 			this.scoreManager.getRecord(),
 		);
 
-		// Audio
+		// Audio — synth recibe referencia a la música para armonizar
 		this.music = new SynthMusic();
-		this.synth = new SynthAudio();
+		this.synth = new SynthAudio(this.music);
 
 		// Sistema de partículas (API Phaser 3.60+)
 		this.emitter = this.add.particles(0, 0, "particles", {
@@ -328,6 +328,19 @@ export default class GameScene extends Phaser.Scene {
 		this.feedbackManager.transitionBackground(theme.color);
 		this.backgroundManager.setTheme(theme.name);
 
+		// Actualizar tint de partículas con paleta del tema
+		const themeData = getTheme(theme.name);
+		if (this.emitter && themeData.ui) {
+			this._particleTint = themeData.ui;
+		}
+
+		// Evolucionar la música sutilmente con el progreso
+		// 0 puntos = 0.0, 500 puntos (legendario) = 1.0
+		if (this.music) {
+			const intensity = Math.min(score / 500, 1.0);
+			this.music.setIntensity(intensity);
+		}
+
 		// Verificar plateau
 		if (
 			this.difficultyManager.hasReachedPlateau() &&
@@ -340,17 +353,12 @@ export default class GameScene extends Phaser.Scene {
 
 	/**
 	 * Handler: Muestra feedback visual cuando hay penalización
+	 * Zen mode: feedback gentil, sin vibrate ni shake agresivo
 	 */
 	onScorePenalty(penalty, consecutiveMisses) {
 		if (penalty > 0) {
-			// Vibrar suavemente
-			window.navigator.vibrate?.(200 * consecutiveMisses);
-
-			// Flash rojo en pantalla (escala con misses consecutivos)
+			// Flash suave con color del tema (no rojo)
 			this.feedbackManager.showMissFlash(consecutiveMisses);
-
-			// Camera shake proporcional a misses consecutivos
-			this.feedbackManager.shakeCamera(0.005 * consecutiveMisses, 150);
 
 			// Mostrar texto de penalización flotante
 			this.feedbackManager.showFloatingScore(
@@ -372,9 +380,8 @@ export default class GameScene extends Phaser.Scene {
 			milestone.message,
 		);
 
-		// Efecto de partículas celebración
-		this.emitter.setPosition(this.scale.width / 2, this.scale.height / 2);
-		this.emitter.explode(30);
+		// Efecto de partículas celebración (con tint del tema)
+		this.emitThemedParticles(this.scale.width / 2, this.scale.height / 2, 30);
 
 		// Burst de estrellas en el fondo
 		this.backgroundManager.burst(12);
@@ -412,6 +419,23 @@ export default class GameScene extends Phaser.Scene {
 
 		// Multiplicador de caída individual (±12%)
 		fruit.setData("fallMult", Phaser.Math.FloatBetween(0.88, 1.12));
+	}
+
+	/**
+	 * Emite partículas con el tint del tema activo.
+	 * Aplica tint individual a cada partícula emitida.
+	 */
+	emitThemedParticles(x, y, count) {
+		this.emitter.setPosition(x, y);
+		this.emitter.explode(count);
+
+		// Aplicar tint del tema a partículas recién emitidas
+		if (this._particleTint) {
+			const tint = this._particleTint;
+			this.emitter.forEachAlive((p) => {
+				p.tint = tint;
+			});
+		}
 	}
 
 	/**
@@ -485,7 +509,6 @@ export default class GameScene extends Phaser.Scene {
 		fruit.setVisible(true);
 		fruit.on("pointerdown", (pointer) => {
 			this.scoreManager.onCatch();
-			this.resetFruit(fruit);
 
 			// Reacción del fondo al tap
 			this.backgroundManager.onCatch();
@@ -498,21 +521,68 @@ export default class GameScene extends Phaser.Scene {
 				this.synth.playCatch();
 			}
 
-			// Emitir partículas en posición del tap
-			this.emitter.setPosition(pointer.x, pointer.y);
-			this.emitter.explode(GameConstants.PARTICLES.EMIT_COUNT);
+			// Emitir partículas en posición del tap (con tint del tema)
+			this.emitThemedParticles(
+				pointer.x,
+				pointer.y,
+				GameConstants.PARTICLES.EMIT_COUNT,
+			);
+
+			// Pop satisfactorio: escalar → desaparecer → renacer arriba
+			fruit.disableInteractive();
+			this.tweens.add({
+				targets: fruit,
+				scaleX: 0,
+				scaleY: 0,
+				alpha: 0.3,
+				duration: 150,
+				ease: "Back.easeIn",
+				onComplete: () => {
+					fruit.setAlpha(1);
+					fruit.setInteractive();
+					this.resetFruit(fruit);
+				},
+			});
 		});
 	}
 
 	/**
 	 * Revisa frutas fuera de límites - penalización Zen Mode
+	 * Fade-out suave en vez de desaparición abrupta
 	 */
 	checkFruitsOutOfBounds() {
+		const threshold = this.scale.height + 20;
 		this.fruits.children.iterate((fruit) => {
-			if (fruit && fruit.y > this.scale.height) {
-				// Penalización suave en lugar de reset a 0
+			if (!fruit || fruit.getData("exiting")) return;
+
+			if (fruit.y > threshold) {
+				// Marcar como saliente para no re-procesar
+				fruit.setData("exiting", true);
+				fruit.disableInteractive();
+
+				// Penalización suave
 				this.scoreManager.onMiss();
-				this.resetFruit(fruit);
+
+				// Suspiro musical suave
+				if (!this.isMuted) {
+					this.synth.playMiss();
+				}
+
+				// Fade out breve, luego reciclar
+				this.tweens.add({
+					targets: fruit,
+					alpha: 0,
+					scaleX: fruit.scaleX * 0.5,
+					scaleY: fruit.scaleY * 0.5,
+					duration: 200,
+					ease: "Sine.easeOut",
+					onComplete: () => {
+						fruit.setAlpha(1);
+						fruit.setData("exiting", false);
+						fruit.setInteractive();
+						this.resetFruit(fruit);
+					},
+				});
 			}
 		});
 	}

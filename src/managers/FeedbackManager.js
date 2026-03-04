@@ -14,11 +14,57 @@ export default class FeedbackManager {
 	}
 
 	/**
-	 * Muestra texto flotante de puntos ganados (estilo Fruit Ninja)
+	 * Devuelve el color UI del tema activo como tint numérico.
+	 */
+	_getThemeColor() {
+		const themeMap = {
+			default: 0xcc66ff,
+			sunset: 0xff3366,
+			forest: 0x33ff33,
+			night: 0x6699ff,
+			cosmic: 0xcc66ff,
+			fire: 0xff6600,
+			gold: 0xffff00,
+		};
+		return themeMap[this.currentTheme] || 0xcc66ff;
+	}
+
+	/**
+	 * Devuelve el color UI del tema activo como string CSS hex.
+	 */
+	_getThemeColorCSS(positive = true) {
+		if (positive) {
+			const map = {
+				default: "#cc66ff",
+				sunset: "#ff3366",
+				forest: "#33ff33",
+				night: "#6699ff",
+				cosmic: "#cc66ff",
+				fire: "#ff6600",
+				gold: "#ffff00",
+			};
+			return map[this.currentTheme] || "#cc66ff";
+		}
+		// Negativo: versión oscura / desaturada del tema
+		const map = {
+			default: "#8844aa",
+			sunset: "#993344",
+			forest: "#337733",
+			night: "#445588",
+			cosmic: "#774488",
+			fire: "#884400",
+			gold: "#998800",
+		};
+		return map[this.currentTheme] || "#8844aa";
+	}
+
+	/**
+	 * Muestra texto flotante de puntos ganados
+	 * Usa colores del tema activo en vez de hardcoded
 	 */
 	showFloatingScore(x, y, points, isPositive = true) {
-		const color = isPositive ? "#33ff33" : "#ff3366";
-		const prefix = isPositive ? "+" : "";
+		const color = this._getThemeColorCSS(isPositive);
+		const prefix = isPositive ? "+" : "-";
 
 		const text = this.scene.add
 			.text(x, y, `${prefix}${points}`, {
@@ -41,20 +87,27 @@ export default class FeedbackManager {
 	}
 
 	/**
-	 * Flash rojo en la pantalla al perder (estilo Piano Tiles)
+	 * Flash suave al perder — zen, no punitivo.
+	 * Usa el color del tema en lugar de rojo agresivo.
+	 * Viñeta desde los bordes en lugar de pantalla completa.
 	 */
 	showMissFlash(consecutiveMisses = 1) {
-		// Duración e intensidad escalan con misses consecutivos
-		const baseDuration = 300;
-		const duration = Math.min(baseDuration + consecutiveMisses * 150, 900);
-		const alpha = Math.min(0.3 + consecutiveMisses * 0.08, 0.6);
+		const w = this.scene.scale.width;
+		const h = this.scene.scale.height;
+
+		// Alpha gentil: sube poco con misses, tope bajo
+		const alpha = Math.min(0.12 + consecutiveMisses * 0.04, 0.3);
+		const duration = 400 + Math.min(consecutiveMisses * 50, 200);
+
+		// Color del tema (fallback: violeta suave en vez de rojo)
+		const themeColor = this._getThemeColor();
 
 		const flash = this.scene.add.rectangle(
-			this.scene.scale.width / 2,
-			this.scene.scale.height / 2,
-			this.scene.scale.width,
-			this.scene.scale.height,
-			0xff0000,
+			w / 2,
+			h / 2,
+			w,
+			h,
+			themeColor,
 			alpha,
 		);
 
@@ -62,6 +115,7 @@ export default class FeedbackManager {
 			targets: flash,
 			alpha: 0,
 			duration: duration,
+			ease: "Sine.easeOut",
 			onComplete: () => flash.destroy(),
 		});
 	}
@@ -205,6 +259,8 @@ export default class FeedbackManager {
 	showMilestoneMessage(title, message) {
 		const centerX = this.scene.scale.width / 2;
 		const centerY = this.scene.scale.height * 0.3;
+		const themeCSS = this._getThemeColorCSS(true);
+		const themeTint = this._getThemeColor();
 
 		// Container para el mensaje
 		const container = this.scene.add.container(centerX, centerY);
@@ -214,17 +270,17 @@ export default class FeedbackManager {
 			.rectangle(0, 0, 350, 120, 0x05001a, 0.9)
 			.setOrigin(0.5);
 
-		// Borde neón
+		// Borde neón — usa color del tema
 		const border = this.scene.add.graphics();
-		border.lineStyle(2, 0xcc66ff, 0.7);
+		border.lineStyle(2, themeTint, 0.7);
 		border.strokeRect(-175, -60, 350, 120);
 		container.add(border);
 
-		// Título del milestone (neon arcade)
+		// Título del milestone (color del tema)
 		const titleText = this.scene.add
 			.text(0, -25, title, {
 				font: "2.5em tres",
-				color: "#cc66ff",
+				color: themeCSS,
 				stroke: "#000000",
 				strokeThickness: 4,
 			})
@@ -318,6 +374,7 @@ export default class FeedbackManager {
 	 * Muestra mensaje de plateau alcanzado
 	 */
 	showPlateauMessage() {
+		const themeCSS = this._getThemeColorCSS(true);
 		const text = this.scene.add
 			.text(
 				this.scene.scale.width / 2,
@@ -325,7 +382,7 @@ export default class FeedbackManager {
 				"VELOCIDAD MAXIMA\nMODO ZEN ACTIVADO",
 				{
 					font: "2em tres",
-					color: "#ff00ff",
+					color: themeCSS,
 					stroke: "#000000",
 					strokeThickness: 4,
 					align: "center",

@@ -65,6 +65,11 @@ export default class SynthMusic {
 		this._lastArpNote = -1;
 		this._restProbability = 0.15; // 15% chance de silencio
 		this._ghostProbability = 0.1; // 10% chance de eco/ghost note
+
+		// ── Intensidad reactiva al gameplay (0–1) ──
+		// Los managers externos llaman setIntensity() para evolucionar
+		// la música con el score sin romper la sensación zen.
+		this._intensity = 0; // 0 = inicio calmado, 1 = plenitud
 	}
 
 	/* ── Context ─────────────────────────────────── */
@@ -257,7 +262,9 @@ export default class SynthMusic {
 					Math.random() < 0.7
 						? bassRoot
 						: this._bassPool[Math.floor(Math.random() * this._bassPool.length)];
-				const volVar = 0.06 + Math.random() * 0.04; // 0.06–0.10
+				// Volumen sube sutilmente con intensidad (0.06–0.10 → 0.07–0.12)
+				const baseVol = 0.06 + this._intensity * 0.01;
+				const volVar = baseVol + Math.random() * 0.04;
 				const durVar = this._baseStepDur * (6 + Math.random() * 4);
 
 				this._note(bassFreq, {
@@ -292,8 +299,10 @@ export default class SynthMusic {
 			}
 		}
 
-		// ── Nota alta esporádica: ~4% probabilidad, muy suave (brillo lejano)
-		if ((beat === 8 || beat === 12) && Math.random() < 0.04) {
+		// ── Nota alta esporádica: probabilidad sube con intensidad (4%→10%)
+		// Más brillo lejano conforme el juego progresa
+		const hiProb = 0.04 + this._intensity * 0.06;
+		if ((beat === 8 || beat === 12) && Math.random() < hiProb) {
 			const chord = this._chords[chordIdx % this._chords.length];
 			const hiFreq = chord[Math.floor(Math.random() * chord.length)] * 2;
 			this._note(hiFreq, {
@@ -305,11 +314,14 @@ export default class SynthMusic {
 		}
 
 		// ── Silencio expresivo: cada ~8 ciclos, dejar un compás sin arpegio
-		// (Solo el pad suena, creando "respiro")
-		// Se implementa subiendo restProbability temporalmente
+		// A mayor intensidad, menos probabilidad de silencios largos
 		if (s === 0) {
+			const baseRest = 0.1 + Math.random() * 0.1;
+			const intensityReduction = this._intensity * 0.04; // menos silencios
 			this._restProbability =
-				this._cycle % 8 === 7 ? 0.7 : 0.1 + Math.random() * 0.1;
+				this._cycle % 8 === 7
+					? 0.7 - this._intensity * 0.2
+					: baseRest - intensityReduction;
 		}
 
 		this._nextTime += this._stepDuration();
@@ -409,5 +421,14 @@ export default class SynthMusic {
 		if (this.masterGain) {
 			this.masterGain.gain.value = Math.max(0, Math.min(1, v));
 		}
+	}
+
+	/**
+	 * Intensidad musical reactiva al gameplay (0–1).
+	 * 0 = inicio calmado, 1 = plenitud (más notas altas, bass más presente, menos silencios).
+	 * Los cambios son siempre sutiles para no romper la sensación zen.
+	 */
+	setIntensity(v) {
+		this._intensity = Math.max(0, Math.min(1, v));
 	}
 }
