@@ -186,9 +186,9 @@ export default class GoldenFruitManager {
 		this.scene.backgroundManager.onCatch();
 		this.scene.backgroundManager.burst(8);
 
-		// Sonido
+		// Sonido golden (barrido brillante chiptune)
 		if (!this.scene.isMuted) {
-			this.scene.sfxBell.play();
+			this.scene.synth.playGolden();
 		}
 
 		// Limpiar y programar siguiente

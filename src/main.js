@@ -16,7 +16,7 @@ const config = {
 	pixelArt: true,
 	backgroundColor: 0x05001a, // dark purple — synthwave
 	audio: {
-		disableWebAudio: true,
+		noAudio: true, // Audio 100% programático via SynthAudio/SynthMusic
 	},
 	input: {
 		activePointers: 3,

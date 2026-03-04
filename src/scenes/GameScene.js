@@ -8,6 +8,8 @@ import FeedbackManager from "../managers/FeedbackManager.js";
 import UIManager from "../managers/UIManager.js";
 import BackgroundManager from "../managers/BackgroundManager.js";
 import GoldenFruitManager from "../managers/GoldenFruitManager.js";
+import SynthAudio from "../audio/SynthAudio.js";
+import SynthMusic from "../audio/SynthMusic.js";
 
 /**
  * Escena principal del juego - Zen Mode
@@ -43,7 +45,7 @@ export default class GameScene extends Phaser.Scene {
 		// Audio
 		this.isMuted = true;
 		this.music = null;
-		this.sfxBell = null;
+		this.synth = null;
 	}
 
 	/**
@@ -91,8 +93,6 @@ export default class GameScene extends Phaser.Scene {
 		});
 
 		// Cargar assets desde public/
-		this.load.audio("song", ["audio/tema.mp3"]);
-		this.load.audio("bell", ["audio/accept.mp3"]);
 		this.load.spritesheet("elements", "img/elementos.png", {
 			frameWidth: 32,
 			frameHeight: 32,
@@ -142,11 +142,8 @@ export default class GameScene extends Phaser.Scene {
 		);
 
 		// Audio
-		this.music = this.sound.add("song");
-		this.music.loop = true;
-		this.music.stop();
-		this.sfxBell = this.sound.add("bell");
-		this.sfxBell.stop();
+		this.music = new SynthMusic();
+		this.synth = new SynthAudio();
 
 		// Sistema de partículas (API Phaser 3.60+)
 		this.emitter = this.add.particles(0, 0, "particles", {
@@ -382,9 +379,9 @@ export default class GameScene extends Phaser.Scene {
 		// Burst de estrellas en el fondo
 		this.backgroundManager.burst(12);
 
-		// Sonido si no está silenciado
+		// Sonido milestone (arpegio ascendente chiptune)
 		if (!this.isMuted) {
-			this.sfxBell.play();
+			this.synth.playMilestone();
 		}
 	}
 
@@ -496,9 +493,9 @@ export default class GameScene extends Phaser.Scene {
 			// Feedback positivo con texto flotante
 			this.feedbackManager.showFloatingScore(pointer.x, pointer.y, 1, true);
 
-			// Sonido
+			// Sonido chiptune – nota pentatónica aleatoria
 			if (!this.isMuted) {
-				this.sfxBell.play();
+				this.synth.playCatch();
 			}
 
 			// Emitir partículas en posición del tap

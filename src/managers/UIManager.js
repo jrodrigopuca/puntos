@@ -248,9 +248,15 @@ export default class UIManager {
 		if (this.isMuted) {
 			this.soundIcon.setTexture("icon-sound-off");
 			this.scene.music?.pause();
+			this.scene.synth?.suspend();
 		} else {
 			this.soundIcon.setTexture("icon-sound-on");
-			this.scene.music?.play();
+			if (this.scene.music?.isPlaying) {
+				this.scene.music.resume();
+			} else {
+				this.scene.music?.play();
+			}
+			this.scene.synth?.resume();
 		}
 
 		// Actualizar referencia en scene
