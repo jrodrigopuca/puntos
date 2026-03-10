@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PUNTOS Icon Generator - Synthwave PWA Icons</title>
+  <style>
+    @font-face {
+      font-family: 'tres';
+      src: url('../public/font/tres.otf') format('opentype');
+    }
+    body {
+      margin: 0;
+      padding: 40px;
+      background: #000;
+      font-family: 'tres', monospace;
+      color: #cc66ff;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 32px;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #ff66aa;
+      margin-bottom: 40px;
+    }
+    .icons-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+    .icon-card {
+      border: 2px solid #cc66ff;
+      padding: 20px;
+      text-align: center;
+      background: rgba(204, 102, 255, 0.05);
+    }
+    .icon-card h3 {
+      margin: 0 0 15px 0;
+      font-size: 18px;
+    }
+    .icon-card canvas {
+      border: 1px solid #cc66ff;
+      margin-bottom: 15px;
+      image-rendering: pixelated;
+    }
+    .icon-card button {
+      background: #cc66ff;
+      color: #05001a;
+      border: none;
+      padding: 10px 20px;
+      font-family: 'tres', monospace;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+    }
+    .icon-card button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 10px rgba(204, 102, 255, 0.5);
+    }
+    .instructions {
+      border: 2px solid #ff66aa;
+      padding: 20px;
+      margin-top: 40px;
+      background: rgba(255, 102, 170, 0.05);
+    }
+    .instructions h2 {
+      margin-top: 0;
+      color: #ff66aa;
+    }
+    .instructions code {
+      background: rgba(204, 102, 255, 0.2);
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+    .instructions ol {
+      line-height: 1.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>PUNTOS Icon Generator</h1>
+    <p class="subtitle">Synthwave PWA Icons with Neon Glow</p>
+
+    <div class="icons-grid">
+      <div class="icon-card">
+        <h3>192x192</h3>
+        <canvas id="icon192" width="192" height="192"></canvas>
+        <button onclick="downloadIcon('icon192', 'icons-192.png')">⬇ Download 192x192</button>
+      </div>
+
+      <div class="icon-card">
+        <h3>512x512</h3>
+        <canvas id="icon512" width="512" height="512"></canvas>
+        <button onclick="downloadIcon('icon512', 'icons-512.png')">⬇ Download 512x512</button>
+      </div>
+
+      <div class="icon-card">
+        <h3>Favicon (192x192)</h3>
+        <canvas id="iconPure" width="192" height="192"></canvas>
+        <button onclick="downloadIcon('iconPure', 'icon-pure.png')">⬇ Download Pure Icon</button>
+      </div>
+    </div>
+
+    <div class="instructions">
+      <h2>📋 Installation Instructions</h2>
+      <ol>
+        <li>Download all three icons using the buttons above</li>
+        <li>Replace the existing files in <code>/public/img/</code>:
+          <ul>
+            <li><code>icons-192.png</code></li>
+            <li><code>icons-512.png</code></li>
+            <li><code>icon-pure.png</code></li>
+          </ul>
+        </li>
+        <li>The new icons will have:
+          <ul>
+            <li>Dark background (#05001a)</li>
+            <li>Neon purple glow (#cc66ff)</li>
+            <li>Enhanced synthwave aesthetic</li>
+          </ul>
+        </li>
+        <li>Clear browser cache and reinstall PWA to see changes</li>
+      </ol>
+    </div>
+  </div>
+
+  <script>
+    // Wait for fonts to load
+    document.fonts.ready.then(() => {
+      generateIcon('icon192', 192);
+      generateIcon('icon512', 512);
+      generateIcon('iconPure', 192, true);
+    });
+
+    function generateIcon(canvasId, size, isPure = false) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+
+      // Background: Dark purple
+      ctx.fillStyle = '#05001a';
+      ctx.fillRect(0, 0, size, size);
+
+      // Outer glow (multiple layers for intensity)
+      const centerX = size / 2;
+      const centerY = size / 2;
+      const maxRadius = size * 0.5;
+
+      // Create radial gradient for glow
+      const glowGradient = ctx.createRadialGradient(
+        centerX, centerY, maxRadius * 0.3,
+        centerX, centerY, maxRadius * 0.9
+      );
+      glowGradient.addColorStop(0, 'rgba(204, 102, 255, 0.4)');
+      glowGradient.addColorStop(0.5, 'rgba(204, 102, 255, 0.2)');
+      glowGradient.addColorStop(1, 'rgba(204, 102, 255, 0)');
+      
+      ctx.fillStyle = glowGradient;
+      ctx.fillRect(0, 0, size, size);
+
+      // Draw pixelated apple with scaling
+      const scale = size / 100; // Base scale relative to 100px reference
+      drawPixelApple(ctx, centerX, centerY, scale);
+
+      // Neon border glow (optional, more intense for pure icon)
+      if (!isPure) {
+        ctx.shadowColor = '#cc66ff';
+        ctx.shadowBlur = size * 0.05;
+        ctx.strokeStyle = '#cc66ff';
+        ctx.lineWidth = size * 0.01;
+        ctx.strokeRect(size * 0.05, size * 0.05, size * 0.9, size * 0.9);
+        ctx.shadowBlur = 0;
+      } else {
+        // Pure icon gets double glow
+        ctx.shadowColor = '#cc66ff';
+        ctx.shadowBlur = size * 0.08;
+        ctx.strokeStyle = 'rgba(204, 102, 255, 0.6)';
+        ctx.lineWidth = size * 0.015;
+        const inset = size * 0.1;
+        ctx.strokeRect(inset, inset, size - inset * 2, size - inset * 2);
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    function drawPixelApple(ctx, centerX, centerY, scale) {
+      // Apple pixel pattern (from favicon.svg)
+      const pattern = [
+        [0,0,0,0,0,1,1,0,0,0,0,0],
+        [0,0,0,0,1,1,0,0,0,0,0,0],
+        [0,0,2,2,2,3,2,2,0,0,0,0],
+        [0,2,2,2,2,2,2,2,2,0,0,0],
+        [2,2,2,2,2,2,2,2,2,2,0,0],
+        [2,2,4,2,2,2,2,4,2,2,0,0],
+        [2,2,2,2,2,2,2,2,2,2,2,0],
+        [2,2,2,2,2,2,2,2,2,2,2,0],
+        [0,2,2,2,2,2,2,2,2,2,0,0],
+        [0,0,5,2,2,2,2,5,0,0,0,0],
+        [0,0,0,5,5,5,5,0,0,0,0,0]
+      ];
+
+      const colors = {
+        0: null,
+        1: '#5fd35f',  // green leaf
+        2: '#fd5e53',  // red apple
+        3: '#ffaaaa',  // light pink highlight
+        4: '#ffd5d5',  // lighter pink
+        5: '#fd3b53'   // dark red shadow
+      };
+
+      const pixelSize = scale * 3; // Each pixel in the pattern
+      const patternWidth = pattern[0].length * pixelSize;
+      const patternHeight = pattern.length * pixelSize;
+      
+      // Center the pattern
+      const startX = centerX - patternWidth / 2;
+      const startY = centerY - patternHeight / 2;
+
+      // Add glow to each colored pixel
+      pattern.forEach((row, i) => {
+        row.forEach((cell, j) => {
+          if (cell !== 0 && colors[cell]) {
+            // Glow effect
+            ctx.shadowColor = colors[cell];
+            ctx.shadowBlur = scale * 2;
+            
+            ctx.fillStyle = colors[cell];
+            ctx.fillRect(
+              startX + j * pixelSize,
+              startY + i * pixelSize,
+              pixelSize,
+              pixelSize
+            );
+          }
+        });
+      });
+
+      // Reset shadow
+      ctx.shadowBlur = 0;
+    }
+
+    function downloadIcon(canvasId, filename) {
+      const canvas = document.getElementById(canvasId);
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+  </script>
+</body>
+</html>

@@ -114,3 +114,8 @@ window.addEventListener("unhandledrejection", (event) => {
 		"An unexpected error occurred. Please reload the page.",
 	);
 });
+
+// Disable context menu (right-click) to prevent interrupting gameplay
+document.addEventListener("contextmenu", (event) => {
+	event.preventDefault();
+});

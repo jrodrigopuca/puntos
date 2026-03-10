@@ -1,6 +1,6 @@
 /**
  * ShareManager - Sistema para compartir scores con imagen generada
- * 
+ *
  * Genera una imagen de score card en canvas y permite compartir via:
  * - Web Share API (móvil)
  * - Download (desktop)
@@ -9,7 +9,7 @@
 export default class ShareManager {
 	constructor(scene) {
 		this.scene = scene;
-		
+
 		// Configuración visual (synthwave theme)
 		this.config = {
 			width: 600,
@@ -21,7 +21,7 @@ export default class ShareManager {
 			recordColor: "#ffff00",
 			fontFamily: "tres, monospace",
 		};
-		
+
 		// Cache del canvas
 		this.canvas = null;
 		this.ctx = null;
@@ -32,7 +32,7 @@ export default class ShareManager {
 	 */
 	createCanvas() {
 		if (this.canvas) return;
-		
+
 		this.canvas = document.createElement("canvas");
 		this.canvas.width = this.config.width;
 		this.canvas.height = this.config.height;
@@ -49,7 +49,7 @@ export default class ShareManager {
 		this.createCanvas();
 		const ctx = this.ctx;
 		const { width, height } = this.config;
-		
+
 		// ═══════════════════════════════════════════════════
 		// FONDO CON GRADIENTE SYNTHWAVE
 		// ═══════════════════════════════════════════════════
@@ -58,12 +58,12 @@ export default class ShareManager {
 		gradient.addColorStop(1, "#150a2e");
 		ctx.fillStyle = gradient;
 		ctx.fillRect(0, 0, width, height);
-		
+
 		// Borde neón
 		ctx.strokeStyle = this.config.accentColor;
 		ctx.lineWidth = 4;
 		ctx.strokeRect(10, 10, width - 20, height - 20);
-		
+
 		// ═══════════════════════════════════════════════════
 		// LOGO "PUNTOS" (ASCII art style)
 		// ═══════════════════════════════════════════════════
@@ -71,27 +71,27 @@ export default class ShareManager {
 		ctx.fillStyle = this.config.accentColor;
 		ctx.textAlign = "center";
 		ctx.textBaseline = "middle";
-		
+
 		// Efecto de sombra/glow
 		ctx.shadowColor = this.config.accentColor;
 		ctx.shadowBlur = 20;
 		ctx.fillText("PUNTOS", width / 2, 80);
 		ctx.shadowBlur = 0;
-		
+
 		// ═══════════════════════════════════════════════════
 		// SCORE PRINCIPAL
 		// ═══════════════════════════════════════════════════
 		ctx.font = `32px ${this.config.fontFamily}`;
 		ctx.fillStyle = this.config.textColor;
 		ctx.fillText("MY SCORE", width / 2, 160);
-		
+
 		ctx.font = `bold 72px ${this.config.fontFamily}`;
 		ctx.fillStyle = this.config.scoreColor;
 		ctx.shadowColor = this.config.scoreColor;
 		ctx.shadowBlur = 15;
 		ctx.fillText(score.toString(), width / 2, 220);
 		ctx.shadowBlur = 0;
-		
+
 		// ═══════════════════════════════════════════════════
 		// RECORD
 		// ═══════════════════════════════════════════════════
@@ -100,18 +100,18 @@ export default class ShareManager {
 			ctx.fillStyle = this.config.recordColor;
 			ctx.fillText(`🏆 BEST: ${record}`, width / 2, 290);
 		}
-		
+
 		// ═══════════════════════════════════════════════════
 		// FOOTER
 		// ═══════════════════════════════════════════════════
 		ctx.font = `24px ${this.config.fontFamily}`;
 		ctx.fillStyle = this.config.textColor;
 		ctx.fillText("Zen Fruit Catcher", width / 2, 340);
-		
+
 		ctx.font = `20px ${this.config.fontFamily}`;
 		ctx.fillStyle = this.config.accentColor;
 		ctx.fillText("jrodrigopuca.github.io/puntos", width / 2, 370);
-		
+
 		// Convertir canvas a blob
 		return new Promise((resolve) => {
 			this.canvas.toBlob((blob) => {
@@ -128,34 +128,33 @@ export default class ShareManager {
 	async shareScore(score, record) {
 		try {
 			const imageBlob = await this.generateScoreImage(score, record);
-			
+
 			// Intentar Web Share API (móvil)
 			if (navigator.share && navigator.canShare) {
 				const file = new File([imageBlob], "puntos-score.png", {
 					type: "image/png",
 				});
-				
+
 				const shareData = {
 					title: "Puntos - My Score",
 					text: `I scored ${score} points in Puntos! 🍎✨`,
-					url: "https://jrodrigopuca.github.io/puntos/",
+					url: "https://jarp-code.itch.io/puntos/",
 					files: [file],
 				};
-				
+
 				// Verificar si se puede compartir con archivos
 				if (navigator.canShare(shareData)) {
 					await navigator.share(shareData);
 					return { success: true, method: "web-share" };
 				}
 			}
-			
+
 			// Fallback 1: Download de la imagen (desktop)
 			this.downloadImage(imageBlob, `puntos-score-${score}.png`);
 			return { success: true, method: "download" };
-			
 		} catch (error) {
 			console.error("Error sharing score:", error);
-			
+
 			// Fallback 2: Copiar texto al clipboard
 			try {
 				const text = `I scored ${score} points in Puntos! 🍎✨\nPlay now: https://jrodrigopuca.github.io/puntos/`;
@@ -188,7 +187,7 @@ export default class ShareManager {
 	async copyLinkToClipboard() {
 		try {
 			await navigator.clipboard.writeText(
-				"https://jrodrigopuca.github.io/puntos/"
+				"https://jrodrigopuca.github.io/puntos/",
 			);
 			return true;
 		} catch (error) {

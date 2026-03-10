@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PUNTOS Cover Image Generator</title>
+  <style>
+    @font-face {
+      font-family: 'tres';
+      src: url('../public/font/tres.otf') format('opentype');
+    }
+    body {
+      margin: 0;
+      padding: 40px;
+      background: #000;
+      font-family: 'tres', monospace;
+      color: #cc66ff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 30px;
+    }
+    h1 {
+      font-size: 32px;
+      margin: 0;
+    }
+    canvas {
+      border: 2px solid #cc66ff;
+      box-shadow: 0 0 20px rgba(204, 102, 255, 0.5);
+    }
+    .instructions {
+      max-width: 630px;
+      text-align: center;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+    button {
+      background: #cc66ff;
+      color: #05001a;
+      border: none;
+      padding: 15px 40px;
+      font-family: 'tres', monospace;
+      font-size: 18px;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(204, 102, 255, 0.5);
+      transition: all 0.2s;
+    }
+    button:hover {
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+  <h1>PUNTOS - Cover Image Generator</h1>
+  
+  <canvas id="coverCanvas" width="630" height="500"></canvas>
+  
+  <div class="instructions">
+    <p><strong>Right-click on the image above and select "Save image as..."</strong></p>
+    <p>Save as: <code>cover.png</code> or <code>cover.jpg</code></p>
+    <p>This is your itch.io cover image (630x500px)</p>
+  </div>
+
+  <button onclick="downloadImage()">⬇ DOWNLOAD COVER IMAGE</button>
+
+  <script>
+    const canvas = document.getElementById('coverCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Load font (wait for it to be ready)
+    document.fonts.ready.then(() => {
+      generateCover();
+    });
+
+    function generateCover() {
+      // Background: Dark purple gradient
+      const gradient = ctx.createLinearGradient(0, 0, 0, 500);
+      gradient.addColorStop(0, '#1a0a2e');
+      gradient.addColorStop(0.5, '#0d0515');
+      gradient.addColorStop(1, '#05001a');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 630, 500);
+
+      // Grid lines (synthwave aesthetic)
+      ctx.strokeStyle = 'rgba(204, 102, 255, 0.15)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 500; i += 20) {
+        ctx.beginPath();
+        ctx.moveTo(0, i);
+        ctx.lineTo(630, i);
+        ctx.stroke();
+      }
+
+      // Vertical grid lines
+      for (let i = 0; i < 630; i += 30) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i, 500);
+        ctx.stroke();
+      }
+
+      // Double neon border
+      ctx.strokeStyle = '#cc66ff';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(10, 10, 610, 480);
+      ctx.strokeRect(15, 15, 600, 470);
+
+      // Draw pixelated fruit icon (simplified apple)
+      drawPixelApple(ctx, 265, 80);
+
+      // Logo "PUNTOS" with glow
+      ctx.shadowColor = '#cc66ff';
+      ctx.shadowBlur = 30;
+      ctx.fillStyle = '#cc66ff';
+      ctx.font = 'bold 72px "tres", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('PUNTOS', 315, 220);
+
+      // Reset shadow
+      ctx.shadowBlur = 0;
+
+      // Subtitle
+      ctx.fillStyle = '#ff66aa';
+      ctx.font = '24px "tres", monospace';
+      ctx.fillText('Zen Fruit Catcher', 315, 270);
+
+      // Tagline
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '18px "tres", monospace';
+      ctx.fillText('Tap fruits • Find your flow', 315, 320);
+
+      // Additional glow effect on borders
+      ctx.shadowColor = '#cc66ff';
+      ctx.shadowBlur = 20;
+      ctx.strokeStyle = 'rgba(204, 102, 255, 0.3)';
+      ctx.lineWidth = 10;
+      ctx.strokeRect(5, 5, 620, 490);
+
+      // Arcade-style scanlines
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+      for (let i = 0; i < 500; i += 4) {
+        ctx.fillRect(0, i, 630, 2);
+      }
+
+      // Footer accent
+      ctx.fillStyle = 'rgba(204, 102, 255, 0.3)';
+      ctx.fillRect(150, 380, 330, 2);
+      
+      ctx.fillStyle = '#8855cc';
+      ctx.font = '14px "tres", monospace';
+      ctx.fillText('STRESS-FREE ARCADE EXPERIENCE', 315, 420);
+    }
+
+    function drawPixelApple(ctx, x, y) {
+      const pixelSize = 4;
+      const scale = 2.5;
+      
+      // Apple pixels pattern (simplified from favicon)
+      const pattern = [
+        [0,0,0,0,0,1,1,0,0,0,0,0],
+        [0,0,0,0,1,1,0,0,0,0,0,0],
+        [0,0,2,2,2,3,2,2,0,0,0,0],
+        [0,2,2,2,2,2,2,2,2,0,0,0],
+        [2,2,2,2,2,2,2,2,2,2,0,0],
+        [2,2,4,2,2,2,2,4,2,2,0,0],
+        [2,2,2,2,2,2,2,2,2,2,2,0],
+        [2,2,2,2,2,2,2,2,2,2,2,0],
+        [0,2,2,2,2,2,2,2,2,2,0,0],
+        [0,0,5,2,2,2,2,5,0,0,0,0],
+        [0,0,0,5,5,5,5,0,0,0,0,0]
+      ];
+
+      const colors = {
+        0: null,
+        1: '#5fd35f',  // green leaf
+        2: '#fd5e53',  // red apple
+        3: '#ffaaaa',  // light pink
+        4: '#ffd5d5',  // lighter pink
+        5: '#fd3b53'   // dark red shadow
+      };
+
+      pattern.forEach((row, i) => {
+        row.forEach((cell, j) => {
+          if (cell !== 0 && colors[cell]) {
+            ctx.fillStyle = colors[cell];
+            ctx.fillRect(
+              x + j * pixelSize * scale,
+              y + i * pixelSize * scale,
+              pixelSize * scale,
+              pixelSize * scale
+            );
+          }
+        });
+      });
+    }
+
+    function downloadImage() {
+      const link = document.createElement('a');
+      link.download = 'puntos-cover.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+  </script>
+</body>
+</html>
