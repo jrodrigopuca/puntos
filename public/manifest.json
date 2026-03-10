@@ -30,10 +30,25 @@
   "categories": ["games", "entertainment"],
   "screenshots": [
     {
-      "src": "/img/screenshot-wide.png",
+      "src": "/img/screenshot-1.png",
       "sizes": "1920x1080",
       "type": "image/png",
-      "form_factor": "wide"
+      "form_factor": "wide",
+      "label": "Active gameplay with multiple fruits"
+    },
+    {
+      "src": "/img/screenshot-2.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Pause menu with share score feature"
+    },
+    {
+      "src": "/img/screenshot-3.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Start screen with PUNTOS logo"
     }
   ]
 }
