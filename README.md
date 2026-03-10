@@ -1,30 +1,84 @@
-# Puntos
+# Puntos 🍎
 
-Juego web casual realizado con PhaserJS. Tap en las frutas que caen antes de que escapen.
+> **A stress-free arcade game where you never lose—just flow.**
 
-## 🧘 Concepto: Zen Mode
+Tap falling fruits in this zen-like experience with evolving synthwave themes and procedural music that grows with your skill. No game overs, no pressure, just pure flow state.
 
-Un juego **anti-estrés** donde nunca pierdes abruptamente. La dificultad alcanza un plateau cómodo y las frutas perdidas solo restan puntos porcentuales. Perfecto para sesiones relajantes de 5-10 minutos.
+**[🎮 Play on itch.io](https://yourname.itch.io/puntos)** | **[🚀 Install as PWA](https://yourname.github.io/puntos/)**
 
-**Características principales:**
+---
 
-- ✨ Sin game over frustrante (penalización gradual tipo Zen Mode)
-- 🔄 Rotación 2.5D con sprites de 12 frames por fruta
-- 📱 Mobile-first: multi-touch (6 pointers) y botón de pantalla completa
-- 🎨 Milestones cada 50 puntos (cambio de tema)
-- 🎵 Audio 100% programático (música generativa + SFX armonizados)
+## ✨ Why Play Puntos?
 
-Ver [Plan de Mejora sección 4.0](docs/IMPROVEMENT_PLAN.md#-fase-4-mejoras-de-gameplay-semana-7-8) para detalles de diseño.
+- **🧘 Zen Mode** — No frustrating game overs. Missed fruits gently reduce your score, but you never lose.
+- **🎨 Dynamic Themes** — Unlock 6 stunning synthwave color palettes every 50 points
+- **🎵 Evolving Soundtrack** — 100% procedural music that harmonizes with your gameplay
+- **🔄 Satisfying Physics** — Watch fruits rotate in 2.5D with 12-frame smooth animations
+- **📱 Mobile-Optimized** — Multi-touch support, fullscreen mode, installable as PWA
+- **⚡ Golden Fruits** — Catch rare golden apples for bonus points and special effects
 
-## Cómo ejecutar
+---
+
+## 🎮 How to Play
+
+1. **Tap fruits** before they fall off the screen
+2. **Build your score** — each fruit is +1 point
+3. **Unlock themes** — reach milestones to change the vibe
+4. **Catch golden fruits** — rare spawns give +3 bonus points
+5. **Find your flow** — difficulty plateaus for endless zen sessions
+
+Perfect for 5-10 minute relaxing breaks.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Engine:** [Phaser 3.90.0](https://phaser.io/) (ES6 modules)
+- **Build:** [Vite 7.3.1](https://vitejs.dev/) (Hot Module Replacement)
+- **Audio:** 100% Web Audio API (generative music + harmonized SFX)
+- **Architecture:** Manager-based pattern with 7 specialized systems
+- **Mobile:** PWA-ready with offline support
+
+---
+
+## 🚀 Development
 
 ```bash
+# Install dependencies
 npm install
+
+# Run dev server (http://localhost:8080)
 npm run dev
-# Abre http://localhost:8080
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
 ```
 
-## Documentación
+---
 
-- [Arquitectura](docs/ARCHITECTURE.md) - Estructura técnica y componentes
-- [Plan de Mejora](docs/IMPROVEMENT_PLAN.md) - Roadmap de 12 semanas con análisis de retención
+## 📚 Documentation
+
+- **[Architecture Guide](docs/ARCHITECTURE.md)** — Technical structure and component breakdown
+- **[Improvement Plan](docs/IMPROVEMENT_PLAN.md)** — 12-week roadmap with retention analysis
+- **[Itch.io Publishing Checklist](docs/PUBLISHING.md)** — Step-by-step guide for release
+
+---
+
+## 📄 License
+
+MIT License - Feel free to learn from the code!
+
+---
+
+## 🎯 Made for Players Who...
+
+- Need a break from stressful competitive games
+- Love synthwave/vaporwave aesthetics
+- Enjoy incremental progression without pressure
+- Want a game that respects their time (5-10 min sessions)
+- Appreciate procedural audio in games
+
+**Built with ❤️ using PhaserJS**

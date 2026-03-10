@@ -231,9 +231,9 @@ export default class FeedbackManager {
 			this.scene.time.delayedCall(3000, () => emitter.destroy());
 		});
 
-		// Texto de NUEVO RECORD (arcade style, sin emojis)
+		// Texto de NEW RECORD (arcade style, sin emojis)
 		const recordText = this.scene.add
-			.text(centerX, this.scene.scale.height / 2, "* NUEVO RECORD *", {
+			.text(centerX, this.scene.scale.height / 2, "* NEW RECORD *", {
 				font: "4em tres",
 				color: "#ffff00",
 				stroke: "#000000",
@@ -379,7 +379,7 @@ export default class FeedbackManager {
 			.text(
 				this.scene.scale.width / 2,
 				this.scene.scale.height * 0.7,
-				"VELOCIDAD MAXIMA\nMODO ZEN ACTIVADO",
+				"MAX SPEED\nZEN MODE ACTIVE",
 				{
 					font: "2em tres",
 					color: themeCSS,

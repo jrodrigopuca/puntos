@@ -8,6 +8,8 @@ import FeedbackManager from "../managers/FeedbackManager.js";
 import UIManager from "../managers/UIManager.js";
 import BackgroundManager from "../managers/BackgroundManager.js";
 import GoldenFruitManager from "../managers/GoldenFruitManager.js";
+import StartScreenManager from "../managers/StartScreenManager.js";
+import ShareManager from "../managers/ShareManager.js";
 import SynthAudio from "../audio/SynthAudio.js";
 import SynthMusic from "../audio/SynthMusic.js";
 
@@ -29,6 +31,8 @@ export default class GameScene extends Phaser.Scene {
 		this.uiManager = null;
 		this.backgroundManager = null;
 		this.goldenFruitManager = null;
+		this.startScreenManager = null;
+		this.shareManager = null;
 
 		// Tracking
 		this.plateauMessageShown = false;
@@ -49,49 +53,123 @@ export default class GameScene extends Phaser.Scene {
 	}
 
 	/**
-	 * Carga assets y muestra barra de progreso arcade
+	 * Carga assets y muestra barra de progreso arcade mejorada
 	 */
 	preload() {
-		const barHeight = 8;
-		const barY = this.scale.height / 2;
+		const { width, height } = this.scale;
+		const centerX = width / 2;
+		const centerY = height / 2;
+		const barHeight = 12;
+		const barWidth = width * 0.7;
+		const barX = centerX - barWidth / 2;
+		const barY = centerY;
 
-		// Borde de la barra (neon cyan)
-		const progressBorder = this.add.graphics();
-		progressBorder.lineStyle(2, 0xcc66ff, 0.8);
-		progressBorder.strokeRect(
-			this.scale.width * 0.1,
-			barY - barHeight / 2,
-			this.scale.width * 0.8,
-			barHeight,
-		);
-
-		// Texto LOADING
-		const loadText = this.add
-			.text(this.scale.width / 2, barY - 30, "LOADING", {
+		// ═══════════════════════════════════════════════════
+		// LOGO "PUNTOS" en loading
+		// ═══════════════════════════════════════════════════
+		const logo = this.add
+			.text(centerX, centerY - 80, "PUNTOS", {
 				fontFamily: "tres, monospace",
-				fontSize: "18px",
+				fontSize: "64px",
 				color: "#cc66ff",
+				stroke: "#000000",
+				strokeThickness: 6,
 			})
 			.setOrigin(0.5);
 
+		// ═══════════════════════════════════════════════════
+		// TEXTO "LOADING..."
+		// ═══════════════════════════════════════════════════
+		const loadText = this.add
+			.text(centerX, centerY - 30, "LOADING...", {
+				fontFamily: "tres, monospace",
+				fontSize: "20px",
+				color: "#ffffff",
+			})
+			.setOrigin(0.5);
+
+		// Animación de parpadeo
+		this.tweens.add({
+			targets: loadText,
+			alpha: 0.4,
+			duration: 600,
+			yoyo: true,
+			repeat: -1,
+		});
+
+		// ═══════════════════════════════════════════════════
+		// BARRA DE PROGRESO
+		// ═══════════════════════════════════════════════════
+		// Borde exterior (doble para efecto CRT)
+		const progressBorder = this.add.graphics();
+		progressBorder.lineStyle(3, 0xcc66ff, 0.8);
+		progressBorder.strokeRect(barX - 2, barY - barHeight / 2 - 2, barWidth + 4, barHeight + 4);
+
+		const progressBorder2 = this.add.graphics();
+		progressBorder2.lineStyle(1, 0xcc66ff, 0.4);
+		progressBorder2.strokeRect(barX - 4, barY - barHeight / 2 - 4, barWidth + 8, barHeight + 8);
+
+		// Fondo oscuro de la barra
+		const progressBg = this.add.graphics();
+		progressBg.fillStyle(0x05001a, 0.8);
+		progressBg.fillRect(barX, barY - barHeight / 2, barWidth, barHeight);
+
+		// Barra de progreso (relleno)
 		const progressBar = this.add.graphics();
+
+		// Texto de porcentaje
+		const percentText = this.add
+			.text(centerX, centerY + 35, "0%", {
+				fontFamily: "tres, monospace",
+				fontSize: "18px",
+				color: "#33ff33",
+			})
+			.setOrigin(0.5);
+
+		// ═══════════════════════════════════════════════════
+		// LISTENERS DE PROGRESO
+		// ═══════════════════════════════════════════════════
 		this.load.on("progress", (value) => {
+			// Actualizar barra
 			progressBar.clear();
 			progressBar.fillStyle(0xcc66ff, 1);
-			progressBar.fillRect(
-				this.scale.width * 0.1,
-				barY - barHeight / 2,
-				this.scale.width * 0.8 * value,
-				barHeight,
-			);
+			progressBar.fillRect(barX, barY - barHeight / 2, barWidth * value, barHeight);
+
+			// Actualizar porcentaje
+			const percent = Math.floor(value * 100);
+			percentText.setText(`${percent}%`);
 		});
 
 		this.load.on("complete", () => {
-			progressBar.destroy();
-			progressBorder.destroy();
-			loadText.destroy();
+			// Fade out de todos los elementos
+			this.tweens.add({
+				targets: [
+					logo,
+					loadText,
+					progressBorder,
+					progressBorder2,
+					progressBg,
+					progressBar,
+					percentText,
+				],
+				alpha: 0,
+				duration: 400,
+				ease: "Power2",
+				onComplete: () => {
+					progressBar.destroy();
+					progressBorder.destroy();
+					progressBorder2.destroy();
+					progressBg.destroy();
+					loadText.destroy();
+					percentText.destroy();
+					logo.destroy();
+				},
+			});
 		});
 
+		// ═══════════════════════════════════════════════════
+		// CARGAR ASSETS
+		// ═══════════════════════════════════════════════════
 		// Cargar assets desde public/
 		this.load.spritesheet("elements", "img/elementos.png", {
 			frameWidth: 32,
@@ -125,6 +203,8 @@ export default class GameScene extends Phaser.Scene {
 		this.uiManager = new UIManager(this);
 		this.backgroundManager = new BackgroundManager(this);
 		this.goldenFruitManager = new GoldenFruitManager(this);
+		this.startScreenManager = new StartScreenManager(this);
+		this.shareManager = new ShareManager(this);
 
 		// Guardar record inicial para detectar nuevo récord
 		this.lastRecord = this.scoreManager.getRecord();
@@ -133,6 +213,7 @@ export default class GameScene extends Phaser.Scene {
 		this.events.on("scoreChanged", this.onScoreChanged, this);
 		this.events.on("scorePenalty", this.onScorePenalty, this);
 		this.events.on("milestoneReached", this.onMilestoneReached, this);
+		this.events.on("startScreenComplete", this.onStartGame, this);
 
 		// Crear fondo dinámico starfield
 		this.backgroundManager.create();
@@ -156,13 +237,27 @@ export default class GameScene extends Phaser.Scene {
 			emitting: false,
 		});
 
-		// Grupo de frutas
+		// Grupo de frutas (creado pero sin spawn hasta START)
 		this.fruits = this.add.group({
 			defaultKey: "elements",
 			maxSize: GameConstants.GAMEPLAY.MAX_FRUITS,
 			runChildUpdate: false,
 		});
 
+		// Escuchar cambios de tamaño
+		this.scale.on("resize", this.handleResize, this);
+
+		// Mostrar pantalla de inicio
+		this.startScreenManager.show();
+
+		// NO iniciar juego hasta que el usuario presione START
+		this.setState(GameState.PAUSED);
+	}
+
+	/**
+	 * Handler: Se ejecuta cuando el usuario presiona START
+	 */
+	onStartGame() {
 		// Spawn inicial de frutas
 		this.time.addEvent({
 			delay: GameConstants.GAMEPLAY.SPAWN_DELAY,
@@ -172,9 +267,6 @@ export default class GameScene extends Phaser.Scene {
 				this.spawnFruit();
 			},
 		});
-
-		// Escuchar cambios de tamaño
-		this.scale.on("resize", this.handleResize, this);
 
 		// Iniciar ciclo de manzana dorada
 		this.goldenFruitManager.start();
@@ -207,7 +299,7 @@ export default class GameScene extends Phaser.Scene {
 	}
 
 	/**
-	 * Muestra overlay de pausa con botón de continuar (estilo arcade neon)
+	 * Muestra overlay de pausa con botón de continuar y share (estilo arcade neon)
 	 */
 	showPauseOverlay() {
 		const centerX = this.scale.width / 2;
@@ -225,13 +317,13 @@ export default class GameScene extends Phaser.Scene {
 		);
 		this.pauseOverlay.setDepth(200);
 
-		// Container para botón de continuar
+		// Container para botones y contenido
 		this.pauseContainer = this.add.container(centerX, centerY);
 		this.pauseContainer.setDepth(201);
 
-		// Texto "PAUSA" arriba (neon cyan)
+		// Texto "PAUSE" arriba (neon cyan)
 		const pauseTitle = this.add
-			.text(0, -80, "PAUSA", {
+			.text(0, -140, "PAUSE", {
 				fontFamily: pixelFont,
 				fontSize: "36px",
 				color: "#cc66ff",
@@ -241,25 +333,55 @@ export default class GameScene extends Phaser.Scene {
 			.setOrigin(0.5);
 		this.pauseContainer.add(pauseTitle);
 
-		// Botón cuadrado arcade neon
+		// ═══════════════════════════════════════════════════
+		// MOSTRAR SCORE Y RECORD
+		// ═══════════════════════════════════════════════════
+		const currentScore = this.scoreManager.getScore();
+		const currentRecord = this.scoreManager.getRecord();
+
+		const scoreText = this.add
+			.text(0, -90, `Score: ${currentScore}`, {
+				fontFamily: pixelFont,
+				fontSize: "28px",
+				color: "#33ff33",
+				stroke: "#000000",
+				strokeThickness: 3,
+			})
+			.setOrigin(0.5);
+		this.pauseContainer.add(scoreText);
+
+		const recordText = this.add
+			.text(0, -55, `Best: ${currentRecord}`, {
+				fontFamily: pixelFont,
+				fontSize: "24px",
+				color: "#ffff00",
+				stroke: "#000000",
+				strokeThickness: 3,
+			})
+			.setOrigin(0.5);
+		this.pauseContainer.add(recordText);
+
+		// ═══════════════════════════════════════════════════
+		// BOTÓN CONTINUE (centrado)
+		// ═══════════════════════════════════════════════════
 		const btnSize = 80;
-		const btnBg = this.add.rectangle(0, 0, btnSize, btnSize, 0x05001a, 0.9);
+		const btnBg = this.add.rectangle(0, 10, btnSize, btnSize, 0x05001a, 0.9);
 		btnBg.setInteractive({ useHandCursor: true });
 		this.pauseContainer.add(btnBg);
 
 		// Borde neón del botón
 		const border = this.add.graphics();
 		border.lineStyle(3, 0xcc66ff, 0.8);
-		border.strokeRect(-btnSize / 2, -btnSize / 2, btnSize, btnSize);
+		border.strokeRect(-btnSize / 2, 10 - btnSize / 2, btnSize, btnSize);
 		this.pauseContainer.add(border);
 
 		// Icono de play
-		const playIcon = this.add.image(0, 0, "icon-play").setDisplaySize(48, 48);
+		const playIcon = this.add.image(0, 10, "icon-play").setDisplaySize(48, 48);
 		this.pauseContainer.add(playIcon);
 
-		// Texto "CONTINUAR" (neon)
+		// Texto "CONTINUE" (neon)
 		const continueText = this.add
-			.text(0, 70, "CONTINUAR", {
+			.text(0, 80, "CONTINUE", {
 				fontFamily: pixelFont,
 				fontSize: "22px",
 				color: "#33ff33",
@@ -273,6 +395,101 @@ export default class GameScene extends Phaser.Scene {
 		btnBg.on("pointerover", () => btnBg.setFillStyle(0xcc66ff, 0.2));
 		btnBg.on("pointerout", () => btnBg.setFillStyle(0x05001a, 0.9));
 		btnBg.on("pointerdown", () => this.togglePause());
+
+		// ═══════════════════════════════════════════════════
+		// BOTÓN SHARE SCORE (abajo)
+		// ═══════════════════════════════════════════════════
+		const shareBtnY = 140;
+		const shareBtnWidth = 200;
+		const shareBtnHeight = 50;
+
+		const shareBg = this.add.rectangle(
+			0,
+			shareBtnY,
+			shareBtnWidth,
+			shareBtnHeight,
+			0x05001a,
+			0.85,
+		);
+		shareBg.setInteractive({ useHandCursor: true });
+		this.pauseContainer.add(shareBg);
+
+		// Borde del botón share
+		const shareBorder = this.add.graphics();
+		shareBorder.lineStyle(2, 0xffff00, 0.6);
+		shareBorder.strokeRect(
+			-shareBtnWidth / 2,
+			shareBtnY - shareBtnHeight / 2,
+			shareBtnWidth,
+			shareBtnHeight,
+		);
+		this.pauseContainer.add(shareBorder);
+
+		// Texto del botón share
+		const shareText = this.add
+			.text(0, shareBtnY, "SHARE SCORE", {
+				fontFamily: pixelFont,
+				fontSize: "20px",
+				color: "#ffff00",
+				stroke: "#000000",
+				strokeThickness: 3,
+			})
+			.setOrigin(0.5);
+		this.pauseContainer.add(shareText);
+
+		// Efectos hover share button
+		shareBg.on("pointerover", () => {
+			shareBg.setFillStyle(0xffff00, 0.2);
+		});
+		shareBg.on("pointerout", () => {
+			shareBg.setFillStyle(0x05001a, 0.85);
+		});
+		shareBg.on("pointerdown", async () => {
+			// Animar click
+			this.tweens.add({
+				targets: [shareBg, shareText],
+				scaleX: 0.95,
+				scaleY: 0.95,
+				duration: 50,
+				yoyo: true,
+			});
+
+			// Compartir score
+			const result = await this.shareManager.shareScore(
+				currentScore,
+				currentRecord,
+			);
+
+			// Mostrar feedback
+			if (result.success) {
+				const feedbackMsg =
+					result.method === "web-share"
+						? "Shared!"
+						: result.method === "download"
+							? "Downloaded!"
+							: "Copied to clipboard!";
+
+				const feedback = this.add
+					.text(0, shareBtnY - 40, feedbackMsg, {
+						fontFamily: pixelFont,
+						fontSize: "18px",
+						color: "#33ff33",
+					})
+					.setOrigin(0.5)
+					.setAlpha(0);
+
+				this.pauseContainer.add(feedback);
+
+				this.tweens.add({
+					targets: feedback,
+					alpha: 1,
+					duration: 200,
+					hold: 1500,
+					yoyo: true,
+					onComplete: () => feedback.destroy(),
+				});
+			}
+		});
 	}
 
 	/**
@@ -294,6 +511,11 @@ export default class GameScene extends Phaser.Scene {
 	 */
 	handleResize(gameSize) {
 		const { width, height } = gameSize;
+
+		// Reposicionar start screen si existe
+		if (this.startScreenManager) {
+			this.startScreenManager.handleResize(gameSize);
+		}
 
 		// Reposicionar overlay de pausa si existe
 		if (this.pauseOverlay) {

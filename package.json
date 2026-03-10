@@ -1,8 +1,24 @@
 {
   "name": "puntos",
   "version": "2.0.0",
-  "description": "Juego web casual realizado con PhaserJS. Tap en las frutas que caen antes de que escapen.",
+  "description": "Casual web game made with PhaserJS. Tap the falling fruits before they escape.",
   "type": "commonjs",
+  "keywords": [
+    "game",
+    "arcade",
+    "casual",
+    "zen",
+    "phaser",
+    "synthwave",
+    "web-game",
+    "pwa",
+    "html5-game",
+    "mobile-game",
+    "relaxing",
+    "fruit-catcher"
+  ],
+  "author": "jarp <jarp@outlook.com>",
+  "license": "MIT",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -12,9 +28,6 @@
     "type": "git",
     "url": "git+https://jrodrigopuca@github.com/jrodrigopuca/puntos.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "bugs": {
     "url": "https://github.com/jrodrigopuca/puntos/issues"
   },
