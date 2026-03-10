@@ -24,14 +24,30 @@ This guide contains everything you need to publish PUNTOS on itch.io and GitHub 
 
 ## 📦 Step 1: Build for Production
 
+### Build for GitHub Pages
+
 ```bash
 npm run build
 ```
 
 This creates the `/dist` folder with:
+- Base path: `/puntos/` (absolute paths for GitHub Pages)
 - Optimized HTML, CSS, JS (15.57 KB + 330 KB Phaser)
 - All assets (images, audio, fonts)
 - PWA manifest and service worker ready
+
+### Build for itch.io
+
+```bash
+npm run build:itch
+```
+
+This creates:
+- `/dist-itch/` folder with **relative paths** (required for itch.io iframe)
+- `publish/builds/puntos-itch.zip` - Ready to upload to itch.io
+- Automatically fixes all paths to be relative (no leading `/`)
+
+**Important:** itch.io requires relative paths because games run in an iframe at `html-classic.itch.zone`. Absolute paths (`/assets/file.js`) will cause 403 Forbidden errors. Always use `npm run build:itch` for itch.io deployments.
 
 ---
 
@@ -82,22 +98,39 @@ A stress-free arcade game with synthwave vibes. Tap falling fruits before they e
 
 ### Upload Game Files
 
-**Option A: Upload ZIP (Recommended for itch.io iframe)**
+**IMPORTANT: Use the itch.io-specific build:**
 
-1. Build the project: `npm run build`
-2. Compress the `/dist` folder → `puntos-v1.0.zip`
-3. Upload to itch.io
-4. Check "This file will be played in the browser"
-5. Set viewport dimensions: **1280 x 720** (or fullscreen if available)
+```bash
+npm run build:itch
+```
 
-**Option B: External URL (Recommended for better PWA experience)**
+This generates `publish/builds/puntos-itch.zip` (~3.4MB) with **relative paths** required by itch.io.
 
-1. Use GitHub Pages URL: `https://jrodrigopuca.github.io/puntos/`
-2. This allows users to install the PWA properly
+**Upload Steps:**
+
+1. Go to "Edit game" → "Upload files"
+2. Upload `publish/builds/puntos-itch.zip`
+3. Check **"This file will be played in the browser"**
+4. Set viewport: **1920 x 1080** (or "Fullscreen button" for responsive)
+5. Orientation: **Landscape**
+6. Mobile friendly: **Yes**
+
+**Why a separate build?**
+
+itch.io serves games in an iframe at `html-classic.itch.zone` which blocks absolute paths (URLs starting with `/`). The regular GitHub Pages build uses `/puntos/` prefix which causes 403 Forbidden errors on itch.io. The `build:itch` command:
+
+1. Builds with base path `/` instead of `/puntos/`
+2. Converts all paths to relative (`assets/file.js` instead of `/assets/file.js`)
+3. Creates optimized ZIP in `publish/builds/` directory
+
+**Alternative: External Link**
+
+You can also link to GitHub Pages: `https://jrodrigopuca.github.io/puntos/`
+This allows better PWA installation but requires players to leave itch.io.
 
 **Best Strategy:** Do BOTH
-- Upload ZIP for embedded iframe on itch.io
-- Also add external link for PWA installation
+- Upload ZIP for embedded play on itch.io
+- Add external link in description for PWA installation
 
 ---
 

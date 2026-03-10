@@ -50,12 +50,34 @@ npm install
 # Run dev server (http://localhost:8080)
 npm run dev
 
-# Build for production
+# Build for GitHub Pages
 npm run build
+
+# Build for itch.io (creates publish/builds/puntos-itch.zip)
+npm run build:itch
 
 # Preview production build
 npm run preview
 ```
+
+### 📁 Project Structure
+
+```
+puntos/
+├── src/                    # Source code
+├── public/                 # Static assets
+├── dist/                   # GitHub Pages build (base: /puntos/)
+├── dist-itch/             # itch.io build (base: /, relative paths)
+├── publish/
+│   ├── builds/            # Production artifacts
+│   │   ├── puntos-itch.zip         # ⬅️ Upload this to itch.io
+│   │   └── fix-itch-paths.sh       # Post-build path fixer
+│   ├── cover.png          # Marketing assets
+│   └── resized/           # Screenshots
+└── tools/                 # Asset generators
+```
+
+**Important:** Always use `npm run build:itch` for itch.io deployments. The regular `npm run build` uses absolute paths that will cause 403 errors on itch.io's iframe environment.
 
 ---
 

@@ -22,7 +22,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:itch": "vite build --config vite.config.itch.js",
+    "build:itch": "vite build --config vite.config.itch.js && ./publish/builds/fix-itch-paths.sh && cd dist-itch && zip -r ../publish/builds/puntos-itch.zip . -x '*.DS_Store' && cd .. && echo '✅ publish/builds/puntos-itch.zip ready for upload!'",
     "preview": "vite preview"
   },
   "repository": {
