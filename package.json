@@ -34,7 +34,7 @@
   },
   "homepage": "https://github.com/jrodrigopuca/puntos#readme",
   "devDependencies": {
-    "vite": "^7.3.1"
+    "vite": "^7.3.2"
   },
   "dependencies": {
     "phaser": "^3.90.0"
